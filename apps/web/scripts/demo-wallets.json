@@ -1,0 +1,41 @@
+{
+  "description": "Demo wallet addresses for testing the Veil patronage app. These wallets are used in development and testing scenarios.",
+  "wallets": [
+    {
+      "name": "Demo Creator 1",
+      "address": "DemoWallet111111111111111111111111111111111",
+      "role": "creator",
+      "notes": "Pre-registered creator with tiers"
+    },
+    {
+      "name": "Demo Creator 2", 
+      "address": "DemoWallet222222222222222222222222222222222",
+      "role": "creator",
+      "notes": "Creator without Umbra registration"
+    },
+    {
+      "name": "Demo Patron 1",
+      "address": "DemoWallet333333333333333333333333333333333",
+      "role": "patron",
+      "notes": "Test patron with funded wallet"
+    },
+    {
+      "name": "Demo Patron 2",
+      "address": "DemoWallet444444444444444444444444444444444",
+      "role": "patron",
+      "notes": "Test patron for sending support"
+    },
+    {
+      "name": "Alice Dev (Seeded)",
+      "address": "DevSeed2222222222222222222222222222222222222",
+      "role": "creator",
+      "notes": "Matches seed-creators.ts - Alice Dev"
+    },
+    {
+      "name": "Beats By Bob (Seeded)",
+      "address": "DevSeed3333333333333333333333333333333333333",
+      "role": "creator", 
+      "notes": "Matches seed-creators.ts - Beats By Bob"
+    }
+  ]
+}

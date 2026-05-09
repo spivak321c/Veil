@@ -1,0 +1,483 @@
+Page: Veil Setup Page
+
+```html
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veil | Profile Setup</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800;9..40,900&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        heading: ['"DM Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        veil: {
+                            bg: '#f4efe7',
+                            surface: '#ffffff',
+                            text: '#202020',
+                            primary: '#72a4f2',
+                            secondary: '#e9dfd2',
+                            muted: '#52525b'
+                        }
+                    },
+                    boxShadow: {
+                        'card': '0 4px 20px -2px rgba(32, 32, 32, 0.05)',
+                        'card-hover': '0 16px 40px -4px rgba(32, 32, 32, 0.15)',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 3s infinite',
+                        'wiggle-slow': 'wiggle 4s ease-in-out infinite',
+                        'fill-bar': 'fillBar 1.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        },
+                        fillBar: {
+                            '0%': { width: '50%' },
+                            '100%': { width: '100%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f4efe7;
+            color: #202020;
+        }
+        
+        .pill-button-primary {
+            background-color: #72a4f2;
+            color: #ffffff;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pill-button-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px -4px rgba(114, 164, 242, 0.6);
+        }
+        .pill-button-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .pill-button-secondary {
+            background-color: #ffffff;
+            color: #202020;
+            border: 2px solid #202020;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pill-button-secondary:hover {
+            background-color: #e9dfd2;
+            border-color: #e9dfd2;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px -4px rgba(32, 32, 32, 0.15);
+        }
+        .pill-button-secondary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: #f4efe7;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #202020;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #72a4f2;
+            box-shadow: 0 0 0 3px rgba(114, 164, 242, 0.2);
+            background-color: #ffffff;
+        }
+        .input-field::placeholder {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        /* Custom Scrollbar for Textarea */
+        textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #e9dfd2;
+            border-radius: 10px;
+        }
+    </style>
+  <style>sd-component { display: block; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/petite-vue@0.4.1/dist/petite-vue.iife.js" defer init></script>
+</head>
+<body class="antialiased selection:bg-veil-primary selection:text-white overflow-x-hidden">
+
+    <div class="min-h-screen relative flex flex-col">
+
+        <!-- Header -->
+        <!-- component: VeilHeader (618dcc46-959a-4739-9f57-0789b38f0699) -->
+<div v-scope="{ ...{&quot;activeItem&quot;:&quot;home&quot;,&quot;homeHref&quot;:&quot;#&quot;,&quot;benefitsHref&quot;:&quot;#features&quot;,&quot;howItWorksHref&quot;:&quot;#how-it-works&quot;,&quot;creatorsHref&quot;:&quot;#creators&quot;,&quot;loginHref&quot;:&quot;https://draft-79a29363-7041-4408-8fd8-163466334997.preview.superdesign.dev&quot;,&quot;signupHref&quot;:&quot;https://draft-3fbed9a9-a9ed-4a4c-9a6c-304c4de1a559.preview.superdesign.dev&quot;}, $emit() {} }">
+<header class="fixed top-0 left-0 right-0 h-20 bg-veil-bg/90 backdrop-blur-md z-50 flex items-center justify-center border-b border-black/5">
+    <div class="w-full max-w-7xl px-6 md:px-12 flex items-center justify-between">
+        <!-- Logo -->
+        <a :href="homeHref" class="flex items-center gap-2 group">
+            <div class="w-10 h-10 rounded-full bg-veil-primary flex items-center justify-center text-white shadow-sm group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">
+                <iconify-icon icon="lucide:heart-handshake" class="text-2xl"></iconify-icon>
+            </div>
+            <span class="font-heading font-black text-2xl md:text-3xl tracking-tight text-veil-text">Veil</span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex items-center gap-8">
+            <a :href="benefitsHref" :class="{ 'text-veil-primary': activeItem === 'benefits', 'text-veil-text': activeItem !== 'benefits' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">Benefits</a>
+            <a :href="howItWorksHref" :class="{ 'text-veil-primary': activeItem === 'how', 'text-veil-text': activeItem !== 'how' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">How it Works</a>
+            <a :href="creatorsHref" :class="{ 'text-veil-primary': activeItem === 'creators', 'text-veil-text': activeItem !== 'creators' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">Creators</a>
+        </nav>
+
+        <!-- CTA -->
+        <div class="flex items-center gap-4">
+            <a :href="loginHref" class="hidden sm:block text-base font-bold text-veil-text hover:text-veil-primary transition-colors">Log in</a>
+            <a :href="signupHref" class="bg-veil-primary text-white rounded-full font-bold px-6 py-2.5 text-base md:text-lg flex items-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-[3px] hover:scale-[1.02] hover:shadow-[0_8px_25px_-4px_rgba(114,164,242,0.6)] active:translate-y-0 active:scale-[0.98]">
+                Start your page
+            </a>
+        </div>
+    </div>
+</header>
+</div>
+<!-- /component: VeilHeader (618dcc46-959a-4739-9f57-0789b38f0699) -->
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full pt-28 pb-20 relative z-0">
+            <div class="max-w-6xl mx-auto px-6 lg:px-12">
+                
+                <!-- Progress Indicator -->
+                <div class="w-full max-w-2xl mx-auto lg:max-w-none mb-10">
+                    <div class="flex items-center justify-between text-sm font-bold text-veil-muted mb-3 px-1">
+                        <span>Step 2 of 2: Profile Setup</span>
+                        <span class="text-veil-primary flex items-center gap-1">
+                            <iconify-icon icon="lucide:sparkles"></iconify-icon> Almost done!
+                        </span>
+                    </div>
+                    <div class="w-full h-3 bg-white rounded-full overflow-hidden shadow-inner border border-black/5">
+                        <div class="h-full bg-veil-primary rounded-full relative overflow-hidden w-1/2 animate-fill-bar">
+                             <div class="absolute inset-0 bg-white/20 w-1/2 skew-x-12 translate-x-full animate-[translateX_2s_infinite]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Split Layout -->
+                <div class="flex flex-col lg:flex-row gap-10 lg:gap-16">
+                    
+                    <!-- Left Column: Form -->
+                    <div class="w-full lg:w-[55%] flex flex-col gap-8">
+                        
+                        <!-- Setup Card -->
+                        <div class="bg-white rounded-[32px] p-8 md:p-10 shadow-card border border-black/5 relative overflow-hidden">
+                            <!-- Decorative blob -->
+                            <div class="absolute -top-10 -right-10 w-32 h-32 bg-veil-secondary/30 rounded-full blur-2xl pointer-events-none"></div>
+
+                            <h1 class="font-heading text-3xl md:text-4xl font-black text-veil-text mb-2">Make it yours</h1>
+                            <p class="text-veil-muted font-medium mb-10">Personalize your page. This is what your fans will see when they come to support you.</p>
+
+                            <!-- Avatar Upload -->
+                            <div class="mb-8">
+                                <label class="block text-sm font-bold text-veil-text mb-4">Profile Picture</label>
+                                <div class="flex items-center gap-6">
+                                    <div class="relative group cursor-pointer">
+                                        <div class="w-24 h-24 rounded-full bg-veil-secondary border-4 border-white shadow-sm overflow-hidden flex items-center justify-center">
+                                            <img id="avatar-preview-img" src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/e1420747-0876-4400-836d-4fc1805dc264.webp" alt="Current avatar" class="w-full h-full object-cover">
+                                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <iconify-icon icon="lucide:camera" class="text-white text-2xl"></iconify-icon>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="px-4 py-2 bg-veil-bg hover:bg-veil-secondary text-veil-text font-bold rounded-xl text-sm transition-colors border border-black/5 mb-2">
+                                            Upload new picture
+                                        </button>
+                                        <p class="text-xs font-medium text-veil-muted">
+                                            Recommended: 400x400px (JPG, PNG, GIF)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bio -->
+                            <div class="mb-10">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-bold text-veil-text" for="bio-input">About You</label>
+                                    <span class="text-xs text-veil-muted font-medium">0/160</span>
+                                </div>
+                                <textarea id="bio-input" rows="4" class="input-field resize-none" placeholder="e.g., I create digital art and write about fantasy worlds. Your support helps me keep creating!">I create digital art and write about fantasy worlds. Your support helps me keep creating!</textarea>
+                            </div>
+
+                            <!-- Tip Categories -->
+                            <div>
+                                <div class="flex items-center gap-2 mb-6">
+                                    <h3 class="font-heading text-xl font-black text-veil-text">Set your tip amounts</h3>
+                                    <div class="relative group flex items-center justify-center cursor-help">
+                                        <iconify-icon icon="lucide:info" class="text-veil-muted hover:text-veil-primary transition-colors"></iconify-icon>
+                                        <!-- Tooltip -->
+                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-veil-text text-white text-xs font-medium p-3 rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-xl z-20">
+                                            Give fans easy options to support you. You can edit these anytime later.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-veil-text"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <!-- Tier 1 -->
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-veil-muted mb-1 pl-1">Option 1 Name</label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-veil-muted">
+                                                    <iconify-icon icon="lucide:coffee"></iconify-icon>
+                                                </div>
+                                                <input type="text" id="tier1-name" class="input-field pl-10" value="Coffee" placeholder="e.g. Coffee">
+                                            </div>
+                                        </div>
+                                        <div class="w-32">
+                                            <label class="block text-xs font-bold text-veil-muted mb-1 pl-1">Amount</label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none font-bold text-veil-muted">$</div>
+                                                <input type="number" id="tier1-amount" class="input-field pl-8" value="3" placeholder="3">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tier 2 -->
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-veil-muted mb-1 pl-1">Option 2 Name</label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-veil-muted">
+                                                    <iconify-icon icon="lucide:pizza"></iconify-icon>
+                                                </div>
+                                                <input type="text" id="tier2-name" class="input-field pl-10" value="Lunch" placeholder="e.g. Lunch">
+                                            </div>
+                                        </div>
+                                        <div class="w-32">
+                                            <label class="block text-xs font-bold text-veil-muted mb-1 pl-1">Amount</label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none font-bold text-veil-muted">$</div>
+                                                <input type="number" id="tier2-amount" class="input-field pl-8" value="10" placeholder="10">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tier 3 -->
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-veil-muted mb-1 pl-1">Option 3 Name</label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-veil-muted">
+                                                    <iconify-icon icon="lucide:star"></iconify-icon>
+                                                </div>
+                                                <input type="text" id="tier3-name" class="input-field pl-10" value="Super Fan" placeholder="e.g. Super Fan">
+                                            </div>
+                                        </div>
+                                        <div class="w-32">
+                                            <label class="block text-xs font-bold text-veil-muted mb-1 pl-1">Amount</label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none font-bold text-veil-muted">$</div>
+                                                <input type="number" id="tier3-amount" class="input-field pl-8" value="25" placeholder="25">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Navigation Actions -->
+                        <div class="flex items-center justify-between mt-2">
+                            <a href="https://draft-3fbed9a9-a9ed-4a4c-9a6c-304c4de1a559.preview.superdesign.dev" id="btn-back" class="px-6 py-3 font-bold text-veil-muted hover:text-veil-text transition-colors flex items-center gap-2">
+                                <iconify-icon icon="lucide:arrow-left"></iconify-icon> Back
+                            </a>
+                            <a href="https://draft-79a29363-7041-4408-8fd8-163466334997.preview.superdesign.dev" id="btn-continue" class="pill-button-primary px-8 py-3 md:py-4 text-lg flex items-center gap-2">
+                                Complete Setup <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Column: Live Preview -->
+                    <div class="w-full lg:w-[45%] lg:mt-0 mt-8">
+                        <div class="sticky top-28">
+                            <div class="flex items-center justify-between mb-4 px-2">
+                                <h3 class="font-heading font-black text-xl text-veil-text flex items-center gap-2">
+                                    <iconify-icon icon="lucide:eye" class="text-veil-primary"></iconify-icon> Live Preview
+                                </h3>
+                                <span class="text-xs font-bold bg-white px-3 py-1 rounded-full text-veil-primary border border-veil-primary/20 shadow-sm animate-pulse">
+                                    Updates as you type
+                                </span>
+                            </div>
+
+                            <!-- Preview Card -->
+                            <div class="bg-white rounded-[32px] shadow-card border border-black/5 overflow-hidden transition-all duration-300 hover:shadow-card-hover group">
+                                
+                                <!-- Cover Image -->
+                                <div class="h-32 bg-veil-secondary w-full relative overflow-hidden">
+                                    <!-- Subtle pattern or shape -->
+                                    <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-xl"></div>
+                                </div>
+
+                                <!-- Profile Info -->
+                                <div class="px-6 pb-6 relative">
+                                    <div class="w-24 h-24 rounded-full border-4 border-white bg-veil-bg -mt-12 mb-4 relative z-10 overflow-hidden shadow-sm">
+                                        <img id="preview-avatar" src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/e1420747-0876-4400-836d-4fc1805dc264.webp" alt="Preview Avatar" class="w-full h-full object-cover">
+                                    </div>
+
+                                    <h2 class="font-heading text-2xl font-black text-veil-text mb-1">Sarah Jenkins</h2>
+                                    <p class="text-sm font-bold text-veil-primary mb-3">veil.to/sarah</p>
+                                    <p id="preview-bio" class="text-veil-muted text-sm leading-relaxed font-medium mb-6 min-h-[60px]">
+                                        I create digital art and write about fantasy worlds. Your support helps me keep creating!
+                                    </p>
+
+                                    <!-- Support Box -->
+                                    <div class="bg-veil-bg rounded-2xl p-5 border border-black/5">
+                                        <h4 class="font-heading font-black text-lg text-veil-text mb-4">Support Sarah Privately</h4>
+                                        
+                                        <!-- Tiers Preview -->
+                                        <div class="grid grid-cols-3 gap-2 mb-4">
+                                            <button class="flex flex-col items-center justify-center py-3 bg-white border border-veil-primary/30 rounded-xl hover:border-veil-primary transition-colors hover:shadow-sm">
+                                                <span id="preview-t1-name" class="text-xs font-bold text-veil-text mb-1">Coffee</span>
+                                                <span id="preview-t1-amount" class="text-sm font-black text-veil-primary">$3</span>
+                                            </button>
+                                            <button class="flex flex-col items-center justify-center py-3 bg-veil-primary border border-veil-primary rounded-xl shadow-md transform -translate-y-1">
+                                                <span id="preview-t2-name" class="text-xs font-bold text-white mb-1">Lunch</span>
+                                                <span id="preview-t2-amount" class="text-sm font-black text-white">$10</span>
+                                            </button>
+                                            <button class="flex flex-col items-center justify-center py-3 bg-white border border-black/10 rounded-xl hover:border-veil-primary transition-colors hover:shadow-sm">
+                                                <span id="preview-t3-name" class="text-xs font-bold text-veil-text mb-1">Super Fan</span>
+                                                <span id="preview-t3-amount" class="text-sm font-black text-veil-text">$25</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="relative mb-4">
+                                            <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none font-bold text-veil-muted">$</div>
+                                            <input type="text" class="w-full bg-white border border-black/10 rounded-xl py-3 pl-8 pr-4 text-sm font-bold text-veil-text focus:outline-none" placeholder="Custom amount">
+                                        </div>
+
+                                        <button class="w-full bg-veil-text text-white rounded-xl py-3 font-bold flex items-center justify-center gap-2 hover:bg-black transition-colors">
+                                            <iconify-icon icon="lucide:lock" class="text-sm"></iconify-icon> Send Tip Privately
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <!-- component: VeilFooter (0c94ea87-7e55-4c05-a26c-479bd53ed83a) -->
+<div v-scope="{ ...{&quot;aboutHref&quot;:&quot;#about&quot;,&quot;privacyHref&quot;:&quot;#privacy&quot;,&quot;termsHref&quot;:&quot;#terms&quot;,&quot;twitterHref&quot;:&quot;#twitter&quot;}, $emit() {} }">
+<footer class="w-full bg-white border-t border-black/5 pt-16 pb-8 z-10 relative">
+    <div class="max-w-7xl mx-auto px-6 md:px-12">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
+            <div class="flex items-center gap-2">
+                <iconify-icon icon="lucide:heart-handshake" class="text-2xl text-[#72a4f2]"></iconify-icon>
+                <span class="font-['DM_Sans'] font-black text-2xl tracking-tight text-[#202020]">Veil</span>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-8">
+                <a :href="aboutHref" id="footer-link-about" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">About</a>
+                <a :href="privacyHref" id="footer-link-privacy" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">Privacy Policy</a>
+                <a :href="termsHref" id="footer-link-terms" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">Terms of Service</a>
+                <a :href="twitterHref" id="footer-link-twitter" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors flex items-center gap-2">
+                    <iconify-icon icon="simple-icons:x"></iconify-icon> Twitter
+                </a>
+            </div>
+        </div>
+        
+        <div class="text-center text-sm font-medium text-[#52525b]">
+            &copy; 2024 Veil. Making creator support private and friendly.
+        </div>
+    </div>
+</footer>
+</div>
+<!-- /component: VeilFooter (0c94ea87-7e55-4c05-a26c-479bd53ed83a) -->
+
+    </div>
+
+    <!-- Live Preview Interaction Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Input Elements
+            const bioInput = document.getElementById('bio-input');
+            const t1Name = document.getElementById('tier1-name');
+            const t1Amount = document.getElementById('tier1-amount');
+            const t2Name = document.getElementById('tier2-name');
+            const t2Amount = document.getElementById('tier2-amount');
+            const t3Name = document.getElementById('tier3-name');
+            const t3Amount = document.getElementById('tier3-amount');
+
+            // Preview Elements
+            const bioPreview = document.getElementById('preview-bio');
+            const pT1Name = document.getElementById('preview-t1-name');
+            const pT1Amount = document.getElementById('preview-t1-amount');
+            const pT2Name = document.getElementById('preview-t2-name');
+            const pT2Amount = document.getElementById('preview-t2-amount');
+            const pT3Name = document.getElementById('preview-t3-name');
+            const pT3Amount = document.getElementById('preview-t3-amount');
+
+            // Event Listeners for Live Update
+            bioInput.addEventListener('input', (e) => {
+                bioPreview.textContent = e.target.value || 'Your bio will appear here...';
+            });
+
+            const bindTier = (inputName, inputAmt, previewName, previewAmt, defaultName, defaultAmt) => {
+                inputName.addEventListener('input', (e) => {
+                    previewName.textContent = e.target.value || defaultName;
+                });
+                inputAmt.addEventListener('input', (e) => {
+                    previewAmt.textContent = '$' + (e.target.value || defaultAmt);
+                });
+            };
+
+            bindTier(t1Name, t1Amount, pT1Name, pT1Amount, 'Option 1', '0');
+            bindTier(t2Name, t2Amount, pT2Name, pT2Amount, 'Option 2', '0');
+            bindTier(t3Name, t3Amount, pT3Name, pT3Amount, 'Option 3', '0');
+        });
+    </script>
+</body>
+</html>
+```
+
+Please reference this design and implement it into our codebase; Try to understand the structure, which part of our codebase is relevant and implement

@@ -1,0 +1,289 @@
+Page: Creator Signup
+
+```html
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Signup | Veil</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800;9..40,900&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        heading: ['"DM Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        veil: {
+                            bg: '#f4efe7',
+                            surface: '#ffffff',
+                            text: '#202020',
+                            primary: '#72a4f2',
+                            secondary: '#e9dfd2',
+                            muted: '#52525b'
+                        }
+                    },
+                    boxShadow: {
+                        'card': '0 4px 20px -2px rgba(32, 32, 32, 0.05)',
+                        'card-hover': '0 16px 40px -4px rgba(32, 32, 32, 0.15)',
+                        'input-focus': '0 0 0 4px rgba(114, 164, 242, 0.2)',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f4efe7;
+            color: #202020;
+        }
+        
+        .pill-button-primary {
+            background-color: #72a4f2;
+            color: #ffffff;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pill-button-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px -4px rgba(114, 164, 242, 0.6);
+        }
+        .pill-button-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: #ffffff;
+            border: 2px solid rgba(0,0,0,0.08);
+            border-radius: 1rem;
+            padding: 0.875rem 1rem;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            color: #202020;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            border-color: #72a4f2;
+            box-shadow: 0 0 0 4px rgba(114, 164, 242, 0.2);
+        }
+        .input-field::placeholder {
+            color: rgba(32, 32, 32, 0.3);
+            font-weight: 500;
+        }
+    </style>
+  <style>sd-component { display: block; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/petite-vue@0.4.1/dist/petite-vue.iife.js" defer init></script>
+</head>
+<body class="antialiased selection:bg-veil-primary selection:text-white overflow-x-hidden">
+
+    <div class="min-h-screen relative flex flex-col">
+
+        <!-- Header Component -->
+        <!-- component: VeilHeader (618dcc46-959a-4739-9f57-0789b38f0699) -->
+<div v-scope="{ ...{&quot;activeItem&quot;:&quot;none&quot;,&quot;homeHref&quot;:&quot;https://draft-3fbed9a9-a9ed-4a4c-9a6c-304c4de1a559.preview.superdesign.dev&quot;,&quot;benefitsHref&quot;:&quot;#features&quot;,&quot;howItWorksHref&quot;:&quot;#how-it-works&quot;,&quot;creatorsHref&quot;:&quot;https://draft-f3d40a5c-31f4-4721-916a-4fba8b9c2046.preview.superdesign.dev&quot;,&quot;loginHref&quot;:&quot;#login&quot;,&quot;signupHref&quot;:&quot;#signup&quot;}, $emit() {} }">
+<header class="fixed top-0 left-0 right-0 h-20 bg-veil-bg/90 backdrop-blur-md z-50 flex items-center justify-center border-b border-black/5">
+    <div class="w-full max-w-7xl px-6 md:px-12 flex items-center justify-between">
+        <!-- Logo -->
+        <a :href="homeHref" class="flex items-center gap-2 group">
+            <div class="w-10 h-10 rounded-full bg-veil-primary flex items-center justify-center text-white shadow-sm group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">
+                <iconify-icon icon="lucide:heart-handshake" class="text-2xl"></iconify-icon>
+            </div>
+            <span class="font-heading font-black text-2xl md:text-3xl tracking-tight text-veil-text">Veil</span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex items-center gap-8">
+            <a :href="benefitsHref" :class="{ 'text-veil-primary': activeItem === 'benefits', 'text-veil-text': activeItem !== 'benefits' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">Benefits</a>
+            <a :href="howItWorksHref" :class="{ 'text-veil-primary': activeItem === 'how', 'text-veil-text': activeItem !== 'how' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">How it Works</a>
+            <a :href="creatorsHref" :class="{ 'text-veil-primary': activeItem === 'creators', 'text-veil-text': activeItem !== 'creators' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">Creators</a>
+        </nav>
+
+        <!-- CTA -->
+        <div class="flex items-center gap-4">
+            <a :href="loginHref" class="hidden sm:block text-base font-bold text-veil-text hover:text-veil-primary transition-colors">Log in</a>
+            <a :href="signupHref" class="bg-veil-primary text-white rounded-full font-bold px-6 py-2.5 text-base md:text-lg flex items-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-[3px] hover:scale-[1.02] hover:shadow-[0_8px_25px_-4px_rgba(114,164,242,0.6)] active:translate-y-0 active:scale-[0.98]">
+                Start your page
+            </a>
+        </div>
+    </div>
+</header>
+</div>
+<!-- /component: VeilHeader (618dcc46-959a-4739-9f57-0789b38f0699) -->
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full pt-28 pb-20 relative z-0 flex items-center justify-center">
+            
+            <!-- Decorative Background Elements -->
+            <div class="absolute top-20 left-[10%] w-64 h-64 bg-white rounded-full blur-3xl opacity-60 -z-10 pointer-events-none"></div>
+            <div class="absolute bottom-10 right-[15%] w-72 h-72 bg-veil-primary/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+            
+            <!-- Playful floating asset -->
+            <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/b75b355b-215e-4cee-8ec2-d6dd9c800c60.webp" alt="Decorative" class="absolute top-32 right-[10%] w-24 opacity-20 -z-10 animate-float hidden lg:block">
+
+            <div class="w-full max-w-xl mx-auto px-6">
+                
+                <!-- Step Indicator & Header -->
+                <div class="text-center mb-8 opacity-0 animate-fade-in-up">
+                    <div class="flex items-center justify-center gap-2 mb-6">
+                        <div class="h-2 w-12 bg-veil-primary rounded-full"></div>
+                        <div class="h-2 w-12 bg-black/10 rounded-full"></div>
+                        <span class="text-sm font-bold text-veil-muted ml-2 uppercase tracking-wide">Step 1 of 2</span>
+                    </div>
+                    <h1 class="font-heading text-4xl md:text-5xl font-black text-veil-text mb-3">Claim your free page</h1>
+                    <p class="text-veil-muted text-lg font-medium">Join thousands of creators getting supported privately.</p>
+                </div>
+
+                <!-- Form Card -->
+                <div class="bg-white rounded-[32px] p-8 md:p-10 shadow-card border border-black/5 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <form class="space-y-6">
+                        
+                        <!-- Email Field -->
+                        <div>
+                            <label for="email" class="block text-base font-bold text-veil-text mb-2">Email Address</label>
+                            <input type="email" id="email" placeholder="you@example.com" class="input-field">
+                            <p class="text-xs text-veil-muted mt-2 font-medium flex items-center gap-1">
+                                <iconify-icon icon="lucide:lock" class="text-veil-primary"></iconify-icon>
+                                We'll never share this with your supporters.
+                            </p>
+                        </div>
+
+                        <!-- Username Field -->
+                        <div>
+                            <label for="username" class="block text-base font-bold text-veil-text mb-2">Claim your URL</label>
+                            <div class="flex rounded-2xl overflow-hidden border-2 border-black/8 focus-within:border-veil-primary focus-within:shadow-input-focus transition-all bg-white">
+                                <span class="px-4 py-3 bg-veil-bg/50 text-veil-muted font-bold border-r border-black/8 select-none flex items-center">
+                                    veil.com/
+                                </span>
+                                <input type="text" id="username" placeholder="yourname" class="flex-1 px-4 py-3 outline-none text-veil-text font-bold placeholder:text-black/30 placeholder:font-medium">
+                            </div>
+                            <p class="text-xs text-veil-muted mt-2 font-medium">Letters, numbers, and dashes only.</p>
+                        </div>
+
+                        <!-- Display Name Field -->
+                        <div>
+                            <label for="display-name" class="block text-base font-bold text-veil-text mb-2">Display Name</label>
+                            <input type="text" id="display-name" placeholder="e.g. Sarah's Art Studio" class="input-field">
+                            <p class="text-xs text-veil-muted mt-2 font-medium">This is what appears at the top of your page.</p>
+                        </div>
+
+                        <!-- Category Dropdown -->
+                        <div>
+                            <label for="category" class="block text-base font-bold text-veil-text mb-2">What do you create?</label>
+                            <div class="relative">
+                                <select id="category" class="input-field appearance-none cursor-pointer pr-10 bg-white">
+                                    <option value="" disabled selected>Select a category...</option>
+                                    <option value="art">Visual Art & Illustration</option>
+                                    <option value="video">Video & Film</option>
+                                    <option value="writing">Writing & Blogging</option>
+                                    <option value="music">Music & Audio</option>
+                                    <option value="tech">Tech & Open Source</option>
+                                    <option value="other">Other / A bit of everything</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-veil-muted">
+                                    <iconify-icon icon="lucide:chevron-down" class="text-xl"></iconify-icon>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Encouragement Box -->
+                        <div class="bg-[#f8faff] border border-veil-primary/20 rounded-2xl p-5 flex gap-4 mt-8">
+                            <div class="w-10 h-10 rounded-full bg-veil-primary/10 flex items-center justify-center shrink-0">
+                                <iconify-icon icon="lucide:shield-check" class="text-xl text-veil-primary"></iconify-icon>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-veil-text text-sm mb-1">Built for Privacy</h4>
+                                <p class="text-sm text-veil-muted font-medium leading-relaxed">
+                                    Your personal details are securely encrypted. Veil severs the link between you and your patrons on-chain.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Next Step CTA -->
+                        <div class="pt-4">
+                            <a href="https://draft-03f80934-c67c-412d-8683-0081ebab886c.preview.superdesign.dev" id="btn-continue" class="w-full pill-button-primary py-4 text-xl flex items-center justify-center gap-2">
+                                Continue to Profile Setup <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                            </a>
+                        </div>
+                        
+                        <p class="text-center text-xs text-veil-muted font-medium mt-4">
+                            By continuing, you agree to our 
+                            <a href="#" class="text-veil-primary font-bold hover:underline">Terms</a> and 
+                            <a href="#" class="text-veil-primary font-bold hover:underline">Privacy Policy</a>.
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer Component -->
+        <!-- component: VeilFooter (0c94ea87-7e55-4c05-a26c-479bd53ed83a) -->
+<div v-scope="{ ...{&quot;aboutHref&quot;:&quot;#about&quot;,&quot;privacyHref&quot;:&quot;#privacy&quot;,&quot;termsHref&quot;:&quot;#terms&quot;,&quot;twitterHref&quot;:&quot;#twitter&quot;}, $emit() {} }">
+<footer class="w-full bg-white border-t border-black/5 pt-16 pb-8 z-10 relative">
+    <div class="max-w-7xl mx-auto px-6 md:px-12">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
+            <div class="flex items-center gap-2">
+                <iconify-icon icon="lucide:heart-handshake" class="text-2xl text-[#72a4f2]"></iconify-icon>
+                <span class="font-['DM_Sans'] font-black text-2xl tracking-tight text-[#202020]">Veil</span>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-8">
+                <a :href="aboutHref" id="footer-link-about" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">About</a>
+                <a :href="privacyHref" id="footer-link-privacy" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">Privacy Policy</a>
+                <a :href="termsHref" id="footer-link-terms" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">Terms of Service</a>
+                <a :href="twitterHref" id="footer-link-twitter" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors flex items-center gap-2">
+                    <iconify-icon icon="simple-icons:x"></iconify-icon> Twitter
+                </a>
+            </div>
+        </div>
+        
+        <div class="text-center text-sm font-medium text-[#52525b]">
+            &copy; 2024 Veil. Making creator support private and friendly.
+        </div>
+    </div>
+</footer>
+</div>
+<!-- /component: VeilFooter (0c94ea87-7e55-4c05-a26c-479bd53ed83a) -->
+
+    </div>
+</body>
+</html>
+```
+
+Please reference this design and implement it into our codebase; Try to understand the structure, which part of our codebase is relevant and implement

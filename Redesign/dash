@@ -1,0 +1,536 @@
+Page: Creator Dashboard
+
+```html
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Dashboard | Veil</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800;9..40,900&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        heading: ['"DM Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        veil: {
+                            bg: '#f4efe7',
+                            surface: '#ffffff',
+                            text: '#202020',
+                            primary: '#72a4f2',
+                            secondary: '#e9dfd2',
+                            muted: '#52525b'
+                        }
+                    },
+                    boxShadow: {
+                        'card': '0 4px 20px -2px rgba(32, 32, 32, 0.05)',
+                        'card-hover': '0 16px 40px -4px rgba(32, 32, 32, 0.15)',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 3s infinite',
+                        'wiggle-slow': 'wiggle 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f4efe7;
+            color: #202020;
+        }
+        
+        .pill-button-primary {
+            background-color: #72a4f2;
+            color: #ffffff;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pill-button-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px -4px rgba(114, 164, 242, 0.6);
+        }
+        .pill-button-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .pill-button-secondary {
+            background-color: #ffffff;
+            color: #202020;
+            border: 2px solid #202020;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pill-button-secondary:hover {
+            background-color: #e9dfd2;
+            border-color: #e9dfd2;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px -4px rgba(32, 32, 32, 0.15);
+        }
+        .pill-button-secondary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* Scroll Reveal Animations */
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .reveal-on-scroll.is-revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom Chart Bar Hover */
+        .chart-bar:hover .chart-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+  <style>sd-component { display: block; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/petite-vue@0.4.1/dist/petite-vue.iife.js" defer init></script>
+</head>
+<body class="antialiased selection:bg-veil-primary selection:text-white overflow-x-hidden">
+
+    <div class="min-h-screen relative flex flex-col">
+
+        <!-- Header / Navigation -->
+        <!-- component: VeilHeader (618dcc46-959a-4739-9f57-0789b38f0699) -->
+<div v-scope="{ ...{&quot;activeItem&quot;:&quot;dashboard&quot;,&quot;homeHref&quot;:&quot;https://draft-79a29363-7041-4408-8fd8-163466334997.preview.superdesign.dev&quot;,&quot;benefitsHref&quot;:&quot;https://draft-f3d40a5c-31f4-4721-916a-4fba8b9c2046.preview.superdesign.dev&quot;,&quot;howItWorksHref&quot;:&quot;https://draft-f3d40a5c-31f4-4721-916a-4fba8b9c2046.preview.superdesign.dev&quot;,&quot;creatorsHref&quot;:&quot;https://draft-f3d40a5c-31f4-4721-916a-4fba8b9c2046.preview.superdesign.dev&quot;,&quot;loginHref&quot;:&quot;https://draft-3fbed9a9-a9ed-4a4c-9a6c-304c4de1a559.preview.superdesign.dev&quot;,&quot;signupHref&quot;:&quot;https://draft-3fbed9a9-a9ed-4a4c-9a6c-304c4de1a559.preview.superdesign.dev&quot;}, $emit() {} }">
+<header class="fixed top-0 left-0 right-0 h-20 bg-veil-bg/90 backdrop-blur-md z-50 flex items-center justify-center border-b border-black/5">
+    <div class="w-full max-w-7xl px-6 md:px-12 flex items-center justify-between">
+        <!-- Logo -->
+        <a :href="homeHref" class="flex items-center gap-2 group">
+            <div class="w-10 h-10 rounded-full bg-veil-primary flex items-center justify-center text-white shadow-sm group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">
+                <iconify-icon icon="lucide:heart-handshake" class="text-2xl"></iconify-icon>
+            </div>
+            <span class="font-heading font-black text-2xl md:text-3xl tracking-tight text-veil-text">Veil</span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex items-center gap-8">
+            <a :href="benefitsHref" :class="{ 'text-veil-primary': activeItem === 'benefits', 'text-veil-text': activeItem !== 'benefits' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">Benefits</a>
+            <a :href="howItWorksHref" :class="{ 'text-veil-primary': activeItem === 'how', 'text-veil-text': activeItem !== 'how' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">How it Works</a>
+            <a :href="creatorsHref" :class="{ 'text-veil-primary': activeItem === 'creators', 'text-veil-text': activeItem !== 'creators' }" class="text-base font-bold hover:text-veil-primary hover:-translate-y-0.5 transition-all">Creators</a>
+        </nav>
+
+        <!-- CTA -->
+        <div class="flex items-center gap-4">
+            <a :href="loginHref" class="hidden sm:block text-base font-bold text-veil-text hover:text-veil-primary transition-colors">Log in</a>
+            <a :href="signupHref" class="bg-veil-primary text-white rounded-full font-bold px-6 py-2.5 text-base md:text-lg flex items-center gap-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-[3px] hover:scale-[1.02] hover:shadow-[0_8px_25px_-4px_rgba(114,164,242,0.6)] active:translate-y-0 active:scale-[0.98]">
+                Start your page
+            </a>
+        </div>
+    </div>
+</header>
+</div>
+<!-- /component: VeilHeader (618dcc46-959a-4739-9f57-0789b38f0699) -->
+
+        <!-- Main Content -->
+        <main class="flex-1 w-full pt-28 pb-20 relative z-0">
+            <div class="max-w-7xl mx-auto px-6 md:px-12">
+                
+                <!-- Top Actions & Greeting -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 reveal-on-scroll is-revealed">
+                    <div>
+                        <h1 class="font-heading text-3xl md:text-4xl font-black text-veil-text flex items-center gap-3">
+                            Welcome back, Alex! <span class="animate-wiggle-slow inline-block origin-bottom-right">👋</span>
+                        </h1>
+                        <p class="text-veil-muted font-medium mt-2 text-lg">Here's what's happening with your page today.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <button id="btn-copy-link" class="pill-button-secondary px-6 py-3 text-base w-full sm:w-auto flex items-center justify-center gap-2">
+                            <iconify-icon icon="lucide:copy" class="text-lg"></iconify-icon> Copy Link
+                        </button>
+                        <a href="https://draft-a3b2427c-a59b-42c2-9bc3-2b52c51bcb30.preview.superdesign.dev" id="btn-view-page" class="pill-button-primary px-6 py-3 text-base w-full sm:w-auto flex items-center justify-center gap-2">
+                            <iconify-icon icon="lucide:external-link" class="text-lg"></iconify-icon> View Public Page
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Metrics Overview Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 reveal-on-scroll is-revealed" style="transition-delay: 100ms;">
+                    <!-- Metric 1 -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-card border border-black/5 flex items-center gap-5 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-full bg-blue-50 text-veil-primary flex items-center justify-center">
+                            <iconify-icon icon="lucide:wallet" class="text-2xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <p class="text-veil-muted font-bold text-sm uppercase tracking-wide">Current Balance</p>
+                            <h3 class="font-heading text-3xl font-black text-veil-text">$842.50</h3>
+                        </div>
+                    </div>
+
+                    <!-- Metric 2 -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-card border border-black/5 flex items-center gap-5 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
+                            <iconify-icon icon="lucide:trending-up" class="text-2xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <p class="text-veil-muted font-bold text-sm uppercase tracking-wide">Last 30 Days</p>
+                            <h3 class="font-heading text-3xl font-black text-veil-text">$1,250.00</h3>
+                        </div>
+                    </div>
+
+                    <!-- Metric 3 -->
+                    <div class="bg-white rounded-[32px] p-6 shadow-card border border-black/5 flex items-center gap-5 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-full bg-veil-secondary/50 text-orange-600 flex items-center justify-center">
+                            <iconify-icon icon="lucide:users" class="text-2xl"></iconify-icon>
+                        </div>
+                        <div>
+                            <p class="text-veil-muted font-bold text-sm uppercase tracking-wide">Total Supporters</p>
+                            <h3 class="font-heading text-3xl font-black text-veil-text">128</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Dashboard Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    <!-- LEFT COLUMN (Spans 2) -->
+                    <div class="lg:col-span-2 space-y-8">
+                        
+                        <!-- Chart Section -->
+                        <section class="bg-white rounded-[32px] p-8 shadow-card border border-black/5 reveal-on-scroll">
+                            <div class="flex justify-between items-center mb-8">
+                                <h2 class="font-heading text-2xl font-black text-veil-text flex items-center gap-2">
+                                    <iconify-icon icon="lucide:bar-chart-3" class="text-veil-primary"></iconify-icon> Earnings Overview
+                                </h2>
+                                <select class="bg-veil-bg border-none text-veil-text font-bold text-sm rounded-full px-4 py-2 outline-none cursor-pointer focus:ring-2 focus:ring-veil-primary">
+                                    <option>Last 6 Months</option>
+                                    <option>This Year</option>
+                                    <option>All Time</option>
+                                </select>
+                            </div>
+
+                            <!-- Custom CSS Bar Chart -->
+                            <div class="h-64 flex items-end justify-between gap-2 sm:gap-4 mt-6 relative border-b-2 border-veil-bg pb-2">
+                                <!-- Y-Axis Labels (decorative) -->
+                                <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs font-bold text-veil-muted/50 pb-2 -ml-2">
+                                    <span>$2k</span>
+                                    <span>$1k</span>
+                                    <span>$0</span>
+                                </div>
+
+                                <!-- Bars -->
+                                <div class="w-full flex justify-between items-end h-full pl-8">
+                                    <!-- Bar 1 -->
+                                    <div class="chart-bar relative w-full max-w-[40px] bg-veil-secondary rounded-t-xl h-[30%] hover:bg-veil-primary transition-colors duration-300 cursor-pointer group">
+                                        <div class="chart-tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-veil-text text-white text-xs font-bold py-1 px-2 rounded-lg opacity-0 transform translate-y-2 transition-all duration-200 whitespace-nowrap z-10 pointer-events-none">
+                                            $450
+                                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-veil-text"></div>
+                                        </div>
+                                        <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold text-veil-muted">Jan</span>
+                                    </div>
+                                    <!-- Bar 2 -->
+                                    <div class="chart-bar relative w-full max-w-[40px] bg-veil-secondary rounded-t-xl h-[45%] hover:bg-veil-primary transition-colors duration-300 cursor-pointer group">
+                                        <div class="chart-tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-veil-text text-white text-xs font-bold py-1 px-2 rounded-lg opacity-0 transform translate-y-2 transition-all duration-200 whitespace-nowrap z-10 pointer-events-none">
+                                            $680
+                                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-veil-text"></div>
+                                        </div>
+                                        <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold text-veil-muted">Feb</span>
+                                    </div>
+                                    <!-- Bar 3 -->
+                                    <div class="chart-bar relative w-full max-w-[40px] bg-veil-secondary rounded-t-xl h-[25%] hover:bg-veil-primary transition-colors duration-300 cursor-pointer group">
+                                        <div class="chart-tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-veil-text text-white text-xs font-bold py-1 px-2 rounded-lg opacity-0 transform translate-y-2 transition-all duration-200 whitespace-nowrap z-10 pointer-events-none">
+                                            $320
+                                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-veil-text"></div>
+                                        </div>
+                                        <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold text-veil-muted">Mar</span>
+                                    </div>
+                                    <!-- Bar 4 -->
+                                    <div class="chart-bar relative w-full max-w-[40px] bg-veil-secondary rounded-t-xl h-[60%] hover:bg-veil-primary transition-colors duration-300 cursor-pointer group">
+                                        <div class="chart-tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-veil-text text-white text-xs font-bold py-1 px-2 rounded-lg opacity-0 transform translate-y-2 transition-all duration-200 whitespace-nowrap z-10 pointer-events-none">
+                                            $950
+                                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-veil-text"></div>
+                                        </div>
+                                        <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold text-veil-muted">Apr</span>
+                                    </div>
+                                    <!-- Bar 5 -->
+                                    <div class="chart-bar relative w-full max-w-[40px] bg-veil-primary rounded-t-xl h-[85%] hover:bg-blue-400 transition-colors duration-300 cursor-pointer group">
+                                        <div class="chart-tooltip absolute -top-10 left-1/2 -translate-x-1/2 bg-veil-text text-white text-xs font-bold py-1 px-2 rounded-lg opacity-0 transform translate-y-2 transition-all duration-200 whitespace-nowrap z-10 pointer-events-none">
+                                            $1,250
+                                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-veil-text"></div>
+                                        </div>
+                                        <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold text-veil-text">May</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Recent Tips Section -->
+                        <section class="bg-white rounded-[32px] p-8 shadow-card border border-black/5 reveal-on-scroll">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="font-heading text-2xl font-black text-veil-text flex items-center gap-2">
+                                    <iconify-icon icon="lucide:heart" class="text-pink-500"></iconify-icon> Recent Support
+                                </h2>
+                                <button class="text-sm font-bold text-veil-primary hover:text-blue-700 transition-colors">View All</button>
+                            </div>
+
+                            <div class="space-y-2">
+                                <!-- Tip Item 1 -->
+                                <div class="flex items-start gap-4 p-4 rounded-[24px] hover:bg-veil-bg transition-colors duration-300 group cursor-default border border-transparent hover:border-black/5">
+                                    <div class="relative">
+                                        <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/19889982-6a06-4417-b844-394927250641.webp" alt="Supporter" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                        <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
+                                            <iconify-icon icon="lucide:coffee" class="text-orange-500 text-xs"></iconify-icon>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="font-bold text-veil-text">Emma Woods</h4>
+                                                <p class="text-xs text-veil-muted font-bold mt-0.5">2 hours ago</p>
+                                            </div>
+                                            <span class="bg-green-100 text-green-700 font-black text-sm px-3 py-1 rounded-full flex items-center gap-1">
+                                                <iconify-icon icon="lucide:gem" class="text-xs"></iconify-icon> $50
+                                            </span>
+                                        </div>
+                                        <p class="text-veil-text text-sm font-medium mt-2 bg-white border border-black/5 p-3 rounded-2xl rounded-tl-sm">
+                                            "Keep up the amazing work! Loved the latest tutorial, it really helped me set up my own project. 💖"
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Tip Item 2 (Anonymous) -->
+                                <div class="flex items-start gap-4 p-4 rounded-[24px] hover:bg-veil-bg transition-colors duration-300 group cursor-default border border-transparent hover:border-black/5">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 rounded-full bg-veil-secondary flex items-center justify-center border-2 border-white shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                            <iconify-icon icon="lucide:ghost" class="text-veil-muted text-xl"></iconify-icon>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="font-bold text-veil-muted italic">Anonymous Supporter</h4>
+                                                <p class="text-xs text-veil-muted font-bold mt-0.5">Yesterday</p>
+                                            </div>
+                                            <span class="bg-green-100 text-green-700 font-black text-sm px-3 py-1 rounded-full flex items-center gap-1">
+                                                <iconify-icon icon="lucide:gem" class="text-xs"></iconify-icon> $15
+                                            </span>
+                                        </div>
+                                        <p class="text-veil-text text-sm font-medium mt-2 bg-white border border-black/5 p-3 rounded-2xl rounded-tl-sm italic">
+                                            "Just a little something to support the channel. Stay awesome!"
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Tip Item 3 -->
+                                <div class="flex items-start gap-4 p-4 rounded-[24px] hover:bg-veil-bg transition-colors duration-300 group cursor-default border border-transparent hover:border-black/5">
+                                    <div class="relative">
+                                        <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/9775cb4c-f9db-4c4f-b992-cd6cdb5d89d1.webp" alt="Supporter" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="font-bold text-veil-text">David R.</h4>
+                                                <p class="text-xs text-veil-muted font-bold mt-0.5">May 12, 2024</p>
+                                            </div>
+                                            <span class="bg-green-100 text-green-700 font-black text-sm px-3 py-1 rounded-full flex items-center gap-1">
+                                                <iconify-icon icon="lucide:gem" class="text-xs"></iconify-icon> $100
+                                            </span>
+                                        </div>
+                                        <p class="text-veil-muted text-sm font-medium mt-2 italic">
+                                            No message provided.
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- RIGHT COLUMN (Spans 1) -->
+                    <div class="space-y-8">
+                        
+                        <!-- Withdraw Card -->
+                        <section class="bg-veil-bg rounded-[32px] p-8 shadow-card border border-black/5 reveal-on-scroll relative overflow-hidden">
+                            <!-- Decorative blob -->
+                            <div class="absolute -top-10 -right-10 w-32 h-32 bg-veil-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+                            
+                            <h2 class="font-heading text-xl font-black text-veil-text mb-2">
+                                Your Wallet
+                            </h2>
+                            <p class="text-sm font-bold text-veil-muted mb-6">Available to withdraw</p>
+                            
+                            <div class="mb-8">
+                                <h3 class="font-heading text-5xl font-black text-veil-text tracking-tight flex items-start gap-1">
+                                    <span class="text-2xl mt-1 text-veil-muted">$</span>842<span class="text-2xl mt-1 text-veil-muted">.50</span>
+                                </h3>
+                            </div>
+
+                            <div class="space-y-3">
+                                <button class="w-full pill-button-primary px-6 py-3.5 text-base flex items-center justify-center gap-2">
+                                    <iconify-icon icon="lucide:building-2"></iconify-icon> Withdraw to Bank
+                                </button>
+                                <button class="w-full pill-button-secondary bg-transparent border-black/20 hover:bg-white px-6 py-3.5 text-base flex items-center justify-center gap-2 text-veil-muted">
+                                    <iconify-icon icon="simple-icons:solana"></iconify-icon> Transfer Crypto
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Share Page Card -->
+                        <section class="bg-white rounded-[32px] p-8 shadow-card border border-black/5 reveal-on-scroll">
+                            <h2 class="font-heading text-xl font-black text-veil-text mb-4 flex items-center gap-2">
+                                <iconify-icon icon="lucide:megaphone" class="text-orange-400"></iconify-icon> Spread the word
+                            </h2>
+                            <p class="text-sm font-medium text-veil-muted mb-6 leading-relaxed">
+                                Share your link on Twitter, YouTube, or anywhere your fans hang out.
+                            </p>
+                            
+                            <div class="flex items-center gap-2 bg-veil-bg p-2 rounded-full border border-black/5 mb-6">
+                                <div class="bg-white px-4 py-2 rounded-full flex-1 text-sm font-bold text-veil-text truncate select-all">
+                                    veil.to/alexcreates
+                                </div>
+                                <button class="bg-veil-text text-white p-2.5 rounded-full hover:bg-veil-primary transition-colors active:scale-95 flex-shrink-0">
+                                    <iconify-icon icon="lucide:copy" class="text-lg"></iconify-icon>
+                                </button>
+                            </div>
+
+                            <button class="w-full bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white rounded-full font-bold px-6 py-3 text-sm flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5">
+                                <iconify-icon icon="simple-icons:twitter"></iconify-icon> Share on Twitter
+                            </button>
+                        </section>
+
+                        <!-- Top Supporters -->
+                        <section class="bg-white rounded-[32px] p-8 shadow-card border border-black/5 reveal-on-scroll">
+                            <h2 class="font-heading text-xl font-black text-veil-text mb-6 flex items-center gap-2">
+                                <iconify-icon icon="lucide:award" class="text-yellow-500"></iconify-icon> Top Supporters
+                            </h2>
+
+                            <div class="space-y-4">
+                                <!-- Top 1 -->
+                                <div class="flex items-center justify-between group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative">
+                                            <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/e1420747-0876-4400-836d-4fc1805dc264.webp" alt="Supporter" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
+                                            <div class="absolute -top-2 -left-2 text-lg drop-shadow-md transform -rotate-12 group-hover:scale-125 transition-transform">
+                                                👑
+                                            </div>
+                                        </div>
+                                        <span class="font-bold text-veil-text text-sm">Sarah Jenkins</span>
+                                    </div>
+                                    <span class="font-black text-veil-primary text-sm">$450</span>
+                                </div>
+                                <!-- Top 2 -->
+                                <div class="flex items-center justify-between group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-veil-secondary flex items-center justify-center border-2 border-white shadow-sm text-veil-text font-bold">
+                                            M
+                                        </div>
+                                        <span class="font-bold text-veil-text text-sm">MikeTriesToCode</span>
+                                    </div>
+                                    <span class="font-black text-veil-text text-sm">$200</span>
+                                </div>
+                                <!-- Top 3 -->
+                                <div class="flex items-center justify-between group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-veil-primary/20 flex items-center justify-center border-2 border-white shadow-sm text-veil-primary">
+                                            <iconify-icon icon="lucide:ghost"></iconify-icon>
+                                        </div>
+                                        <span class="font-bold text-veil-muted text-sm italic">Anonymous</span>
+                                    </div>
+                                    <span class="font-black text-veil-text text-sm">$150</span>
+                                </div>
+                            </div>
+                            <button class="w-full mt-6 text-sm font-bold text-veil-primary hover:text-blue-700 transition-colors py-2 bg-blue-50 hover:bg-blue-100 rounded-full">
+                                View Leaderboard
+                            </button>
+                        </section>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <!-- component: VeilFooter (0c94ea87-7e55-4c05-a26c-479bd53ed83a) -->
+<div v-scope="{ ...{&quot;aboutHref&quot;:&quot;#about&quot;,&quot;privacyHref&quot;:&quot;#privacy&quot;,&quot;termsHref&quot;:&quot;#terms&quot;,&quot;twitterHref&quot;:&quot;#twitter&quot;}, $emit() {} }">
+<footer class="w-full bg-white border-t border-black/5 pt-16 pb-8 z-10 relative">
+    <div class="max-w-7xl mx-auto px-6 md:px-12">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
+            <div class="flex items-center gap-2">
+                <iconify-icon icon="lucide:heart-handshake" class="text-2xl text-[#72a4f2]"></iconify-icon>
+                <span class="font-['DM_Sans'] font-black text-2xl tracking-tight text-[#202020]">Veil</span>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-8">
+                <a :href="aboutHref" id="footer-link-about" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">About</a>
+                <a :href="privacyHref" id="footer-link-privacy" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">Privacy Policy</a>
+                <a :href="termsHref" id="footer-link-terms" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors">Terms of Service</a>
+                <a :href="twitterHref" id="footer-link-twitter" class="text-base font-bold text-[#52525b] hover:text-[#72a4f2] transition-colors flex items-center gap-2">
+                    <iconify-icon icon="simple-icons:x"></iconify-icon> Twitter
+                </a>
+            </div>
+        </div>
+        
+        <div class="text-center text-sm font-medium text-[#52525b]">
+            &copy; 2024 Veil. Making creator support private and friendly.
+        </div>
+    </div>
+</footer>
+</div>
+<!-- /component: VeilFooter (0c94ea87-7e55-4c05-a26c-479bd53ed83a) -->
+
+    </div>
+
+    <!-- Scroll Reveal Animation Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px 0px -50px 0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-revealed');
+                        // Optional: stop observing once revealed to animate only once
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal-on-scroll').forEach((element) => {
+                observer.observe(element);
+            });
+        });
+    </script>
+</body>
+</html>
+```
+
+Please reference this design and implement it into our codebase; Try to understand the structure, which part of our codebase is relevant and implement

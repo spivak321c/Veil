@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  /* Veil Warm Palette */
+  --color-veil-bg: #f4efe7;
+  --color-veil-surface: #ffffff;
+  --color-veil-surface-elevated: #f4efe7;
+  --color-veil-primary: #72a4f2;
+  --color-veil-secondary: #e9dfd2;
+  --color-veil-text: #202020;
+  --color-veil-muted: #52525b;
+
+  /* Typography */
+  --font-heading: var(--font-heading), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: var(--font-body), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-mono), "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Radii */
+  --radius-cards: 32px;
+  --radius-inputs: 16px;
+  --radius-full: 9999px;
+}
+
+@layer base {
+  :root {
+    --background: #f4efe7;
+    --foreground: #202020;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .pill-button-primary {
+    @apply bg-veil-primary text-white rounded-full font-bold transition-all duration-200 px-6 py-3;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .pill-button-primary:hover {
+    @apply -translate-y-1 scale-[1.02];
+    box-shadow: 0 8px 25px -4px rgba(114, 164, 242, 0.6);
+  }
+  .pill-button-primary:active {
+    @apply translate-y-0 scale-[0.98];
+  }
+
+  .pill-button-secondary {
+    @apply bg-white text-veil-text border-2 border-veil-text rounded-full font-bold transition-all duration-200 px-6 py-3;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .pill-button-secondary:hover {
+    @apply bg-veil-secondary border-veil-secondary -translate-y-1 scale-[1.02];
+    box-shadow: 0 8px 25px -4px rgba(32, 32, 32, 0.15);
+  }
+  .pill-button-secondary:active {
+    @apply translate-y-0 scale-[0.98];
+  }
+}
+
+::selection {
+  background-color: #72a4f2;
+  color: #ffffff;
+}
+
+*:focus-visible {
+  outline: 2px solid #72a4f2;
+  outline-offset: 2px;
+}

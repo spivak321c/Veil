@@ -1,0 +1,22 @@
+{
+  "name": "veil",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --cwd apps/web dev",
+    "build": "bun run --cwd apps/web build",
+    "start": "bun run --cwd apps/web start",
+    "lint": "bun run --cwd apps/web lint",
+    "typecheck": "bun run --cwd apps/web tsc --noEmit",
+    "fund:check": "bun run --cwd apps/web tsx scripts/check-funder.ts",
+    "fund:sol": "bun run --cwd apps/web tsx scripts/airdrop-sol.ts",
+    "fund:usdc": "bun run --cwd apps/web tsx scripts/fund-usdc.ts",
+    "fund:demo": "bun run --cwd apps/web tsx scripts/fund-demo.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

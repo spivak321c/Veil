@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../apps/web/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Creator {
+  id              String   @id @default(cuid())
+  walletAddress   String   @unique
+  umbraRegistered Boolean  @default(false)
+  slug            String   @unique
+  displayName     String
+  bio             String   @db.Text
+  avatarUrl       String?
+  category        Category @default(OTHER)
+  tiers           Tier[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@index([walletAddress])
+}
+
+model Tier {
+  id          String  @id @default(cuid())
+  creatorId   String
+  creator     Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  name        String
+  amountUsdc  Int
+  description String  @db.Text
+  sortOrder   Int     @default(0)
+
+  @@index([creatorId])
+}
+
+model SupportEvent {
+  id            String    @id @default(cuid())
+  creatorId     String
+  amountUsdc    Int
+  utxoSignature String?
+  claimedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([creatorId])
+}
+
+model AuthNonce {
+  walletAddress String   @id
+  nonce         String
+  expiresAt     DateTime
+
+  @@index([walletAddress])
+}
+
+enum Category {
+  MUSIC
+  ART
+  WRITING
+  DEVELOPMENT
+  GAMING
+  EDUCATION
+  OTHER
+}
