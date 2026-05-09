@@ -193,8 +193,23 @@ export function useSendUtxo() {
         amount: amountUsdc as unknown as Parameters<typeof createUtxo>[0]["amount"],
       });
 
-      const signatures = result as unknown as string[];
-      const utxoSig = signatures[1] ?? signatures[0] ?? "";
+      console.log("[useSendUtxo] createUtxo result type:", typeof result);
+      console.log("[useSendUtxo] createUtxo result:", result);
+      console.log("[useSendUtxo] Is array:", Array.isArray(result));
+      if (Array.isArray(result)) {
+        console.log("[useSendUtxo] Array length:", result.length);
+        console.log("[useSendUtxo] Array contents:", JSON.stringify(result, (_, v) => typeof v === 'bigint' ? v.toString() : v));
+      }
+
+      const signatures = Array.isArray(result) ? result : [];
+      const utxoSig = signatures.length > 0 ? String(signatures[0]) : "";
+
+      console.log("[useSendUtxo] Extracted signature:", utxoSig.substring(0, 20) + "...");
+
+      if (!utxoSig) {
+        console.error("[useSendUtxo] No transaction signature returned from createUtxo!");
+        throw new Error("Transaction completed but no signature was returned. The payment may still be processing — check your wallet.");
+      }
 
       onProgress({ status: 'awaiting_mpc', queueSignature: utxoSig });
       onProgress({ status: 'success', callbackSignature: utxoSig });

@@ -8,13 +8,14 @@ import { formatMicroUsdc } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 
 interface SendFlowProps {
+  creatorSlug: string;
   creatorName: string;
   recipientAddress: string;
   amountMicroUsdc: number;
   onClose: () => void;
 }
 
-export function SendFlow({ creatorName, recipientAddress, amountMicroUsdc, onClose }: SendFlowProps) {
+export function SendFlow({ creatorSlug, creatorName, recipientAddress, amountMicroUsdc, onClose }: SendFlowProps) {
   const { send } = useSendUtxo();
   const [step, setStep] = useState<SendStep>({ status: "idle" });
   const router = useRouter();
@@ -27,23 +28,35 @@ export function SendFlow({ creatorName, recipientAddress, amountMicroUsdc, onClo
 
   const handleSend = async () => {
     try {
-      await send(recipientAddress, amtBigInt, (progress) => {
+      const signature = await send(recipientAddress, amtBigInt, (progress) => {
         setStep(progress);
-        if (progress.status === "success") {
-          fetch("/api/events", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              creatorSlug: window.location.pathname.split("/").pop(),
-              amountUsdc: Number(amountMicroUsdc),
-              utxoSignature: progress.callbackSignature,
-            })
-          }).catch(console.error);
-          
-          // Redirect to success page instead of staying in modal
-          router.push(`/send/success?creator=${encodeURIComponent(creatorName)}&tx=${progress.callbackSignature}`);
-        }
       });
+
+      console.log("[SendFlow] Send completed, recording event. Signature:", signature);
+
+      try {
+        const res = await fetch("/api/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            creatorSlug,
+            amountUsdc: Number(amountMicroUsdc),
+            utxoSignature: signature,
+          })
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          console.error("[SendFlow] Failed to record event:", errorData);
+        } else {
+          const data = await res.json();
+          console.log("[SendFlow] Event recorded successfully:", data);
+        }
+      } catch (err) {
+        console.error("[SendFlow] Error recording event:", err);
+      }
+
+      router.push(`/send/success?creator=${encodeURIComponent(creatorName)}&tx=${signature}`);
     } catch (err: any) {
       console.error(err);
     }

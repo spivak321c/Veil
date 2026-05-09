@@ -5,10 +5,12 @@ import { createEventSchema } from "@/lib/validation";
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body: unknown = await req.json();
+    console.log("[POST /api/events] Received body:", JSON.stringify(body, null, 2));
     const parsed = createEventSchema.safeParse(body);
     if (!parsed.success) {
+      console.log("[POST /api/events] Validation errors:", parsed.error.errors);
       return NextResponse.json(
-        { error: "Invalid input", code: "VALIDATION_ERROR" },
+        { error: "Invalid input", code: "VALIDATION_ERROR", details: parsed.error.errors },
         { status: 400 }
       );
     }
