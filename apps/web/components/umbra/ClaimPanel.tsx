@@ -17,7 +17,9 @@ export function ClaimPanel({ onClaimed }: { onClaimed: () => void }) {
     try {
       setStatus("scanning");
       // Optionally read startIndex from localStorage here
-      const result = await scanAndClaim(0, 0);
+      //const result = await scanAndClaim(0, 0);
+      const result = await scanAndClaim(0n, 0n);
+
       setLastResult(result);
       
       if (result.claimed > 0) {

@@ -264,6 +264,7 @@ export default function CreatorPage({ params }: { params: Promise<{ slug: string
       <VeilFooter />
       {isSending && (
         <SendFlow 
+          creatorSlug={slug}
           creatorName={creator.displayName}
           recipientAddress={creator.walletAddress}
           amountMicroUsdc={Number(customAmount || 0)}

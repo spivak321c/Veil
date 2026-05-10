@@ -11,14 +11,14 @@ import {
   Users, 
   BarChart3, 
   Heart, 
-  Building2, 
   ArrowRight, 
   Copy, 
   ExternalLink, 
   Megaphone, 
   Award, 
   Ghost,
-  Download
+  Download,
+  RotateCw
 } from "lucide-react";
 import { formatMicroUsdc } from "@/lib/constants";
 import { EventFeed } from "@/components/creator/EventFeed";
@@ -74,6 +74,7 @@ export function DashboardContent() {
       setIsClaiming(true);
       const { claimed } = await scanAndClaim();
       if (claimed > 0) {
+        await fetch("/api/events/claim-all", { method: "POST" });
         toast.success(`Successfully claimed ${claimed} payments`);
         await fetchBalance();
         await fetchDashboard();
@@ -299,8 +300,24 @@ export function DashboardContent() {
             </div>
 
             <div className="space-y-3">
-              <button className="w-full pill-button-primary px-6 py-3.5 text-base flex items-center justify-center gap-2">
-                <Building2 className="w-4 h-4" /> Withdraw to Bank
+              <button 
+                onClick={handleClaim}
+                disabled={isClaiming || data.stats.pendingEvents === 0}
+                className="w-full pill-button-primary px-6 py-3.5 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isClaiming ? (
+                  <>
+                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                      <RotateCw className="w-4 h-4" />
+                    </motion.div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <RotateCw className="w-4 h-4" />
+                    Claim {data.stats.pendingEvents > 0 ? `${data.stats.pendingEvents} Payment${data.stats.pendingEvents > 1 ? "s" : ""}` : "Payments"}
+                  </>
+                )}
               </button>
               <button className="w-full pill-button-secondary bg-transparent border-black/20 hover:bg-white px-6 py-3.5 text-base flex items-center justify-center gap-2 text-veil-muted">
                 <span>SOL</span> Transfer Crypto

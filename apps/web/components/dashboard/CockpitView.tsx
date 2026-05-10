@@ -54,6 +54,7 @@ export function CockpitView() {
       const { claimed } = await scanAndClaim();
       
       if (claimed > 0) {
+        await fetch("/api/events/claim-all", { method: "POST" });
         toast.success(`Successfully claimed ${claimed} payments`);
         await fetchBalance();
         await fetchDashboard();

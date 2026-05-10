@@ -193,18 +193,19 @@ export function useSendUtxo() {
         amount: amountUsdc as unknown as Parameters<typeof createUtxo>[0]["amount"],
       });
 
-      console.log("[useSendUtxo] createUtxo result type:", typeof result);
       console.log("[useSendUtxo] createUtxo result:", result);
-      console.log("[useSendUtxo] Is array:", Array.isArray(result));
-      if (Array.isArray(result)) {
-        console.log("[useSendUtxo] Array length:", result.length);
-        console.log("[useSendUtxo] Array contents:", JSON.stringify(result, (_, v) => typeof v === 'bigint' ? v.toString() : v));
-      }
+      console.log("[useSendUtxo] createUtxo full result:", JSON.stringify(result));
+      console.log("[useSendUtxo] createUtxo result keys:", Object.keys(result as object));
 
-      const signatures = Array.isArray(result) ? result : [];
-      const utxoSig = signatures.length > 0 ? String(signatures[0]) : "";
 
-      console.log("[useSendUtxo] Extracted signature:", utxoSig.substring(0, 20) + "...");
+
+      //const utxoSig = result.createUtxoSignature;
+      const utxoSig = (result as any).createUtxoSignature
+  ?? (result as any).utxoSignature
+  ?? (result as any).queueSignature
+  ?? (result as any).signature;
+
+      console.log("[useSendUtxo] Extracted signature:", utxoSig);
 
       if (!utxoSig) {
         console.error("[useSendUtxo] No transaction signature returned from createUtxo!");

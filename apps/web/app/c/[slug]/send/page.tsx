@@ -106,6 +106,7 @@ export default function SendPage({ params }: { params: Promise<{ slug: string }>
 
       {isSending && (
         <SendFlow 
+          creatorSlug={slug}
           creatorName={creator.displayName}
           recipientAddress={creator.walletAddress}
           amountMicroUsdc={Number(amount) * 1000000}
