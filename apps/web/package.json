@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma@5.22.0 generate --schema=../../packages/db/schema.prisma && next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -17,6 +17,7 @@
     "@solana/react-hooks": "^1.4.1",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3-compat": "^0.0.21",
+    "@solana/web3.js": "^1.98.0",
     "@solana/webcrypto-ed25519-polyfill": "^6.9.0",
     "@umbra-privacy/sdk": "^4.0.0",
     "@umbra-privacy/web-zk-prover": "^2.0.1",
