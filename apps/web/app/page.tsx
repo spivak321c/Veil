@@ -109,7 +109,7 @@ export default function LandingPage() {
               className="text-center max-w-3xl mx-auto mb-20"
             >
               <h2 className="font-heading text-4xl md:text-5xl font-black mb-6 text-veil-text">Everything you need, without the snooping</h2>
-              <p className="text-veil-muted text-xl font-medium">Traditional payments expose your supporters. Veil magically protects everyone's privacy behind the scenes.</p>
+              <p className="text-veil-muted text-xl font-medium">Normal Solana payments expose your supporters. Veil magically protects everyone's privacy behind the scenes.</p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">

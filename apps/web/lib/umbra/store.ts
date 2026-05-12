@@ -4,18 +4,22 @@ export interface UmbraStore {
   client: any | null; // using any since @umbra-privacy/sdk types might need explicit imports
   isInitializing: boolean;
   error: string | null;
+  retryKey: number;
   setClient: (client: any | null) => void;
   setInitializing: (isInitializing: boolean) => void;
   setError: (error: string | null) => void;
   reset: () => void;
+  retryInitialize: () => void;
 }
 
 export const useUmbraStore = create<UmbraStore>((set) => ({
   client: null,
   isInitializing: false,
   error: null,
+  retryKey: 0,
   setClient: (client) => set({ client }),
   setInitializing: (isInitializing) => set({ isInitializing }),
   setError: (error) => set({ error }),
-  reset: () => set({ client: null, isInitializing: false, error: null }),
+  reset: () => set({ client: null, isInitializing: false, error: null, retryKey: 0 }),
+  retryInitialize: () => set((state) => ({ retryKey: state.retryKey + 1, error: null })),
 }));

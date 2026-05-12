@@ -8,7 +8,7 @@ import { initUmbraClient } from "@/lib/umbra/client";
 
 export function UmbraProvider({ children }: { children: React.ReactNode }) {
   const walletStatus = useWallet();
-  const { setClient, setInitializing, setError, reset } = useUmbraStore();
+  const { setClient, setInitializing, setError, reset, retryKey } = useUmbraStore();
 
   const isConnected = walletStatus.status === "connected";
   const session = isConnected ? walletStatus.session : null;
@@ -125,6 +125,7 @@ export function UmbraProvider({ children }: { children: React.ReactNode }) {
     setInitializing,
     setError,
     reset,
+    retryKey,
   ]);
 
   return <>{children}</>;

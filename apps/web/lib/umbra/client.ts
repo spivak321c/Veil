@@ -29,7 +29,7 @@ export async function initUmbraClient(wallet: IUmbraSigner) {
       rpcUrl: DEVNET_RPC,
       rpcSubscriptionsUrl: DEVNET_WSS,
       indexerApiEndpoint: "https://utxo-indexer.api-devnet.umbraprivacy.com",
-      deferMasterSeedSignature: false,
+      deferMasterSeedSignature: true,
     },
     {
       transactionForwarder,

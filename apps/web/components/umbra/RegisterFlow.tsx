@@ -6,10 +6,12 @@ import { useUmbraRegistration } from "@/lib/umbra/useUmbraRegistration";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Shield, ShieldAlert, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { useUmbraStore } from "@/lib/umbra/store";
 import { toast } from "sonner";
 
 export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
   const { register, isInitializing, initError } = useUmbraRegistration();
+  const retryInitialize = useUmbraStore((s) => s.retryInitialize);
   const { connected } = useWalletConnection();
   const [status, setStatus] = useState<"idle" | "registering" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -78,9 +80,14 @@ export function RegisterFlow({ onComplete }: { onComplete: () => void }) {
         <div className="mb-[24px] p-[16px] bg-vivid-pink/10 border border-vivid-pink/20 rounded-[16px] text-vivid-pink text-[14px] max-w-[35ch] w-full text-left flex items-start gap-3">
           <ShieldAlert className="w-5 h-5 mt-0.5 shrink-0" />
           <div>
-            <span className="font-bold">Wallet connection error:</span>
+            <span className="font-bold">Initialization error:</span>
             <p className="text-xs mt-1 opacity-80">{initError}</p>
-            <p className="text-xs mt-2 font-medium">Please reconnect your wallet and try again.</p>
+            <button
+              onClick={() => retryInitialize()}
+              className="mt-3 text-xs font-bold underline hover:opacity-80 transition-opacity"
+            >
+              Retry Connection
+            </button>
           </div>
         </div>
       )}

@@ -32,7 +32,7 @@ export default function VeilFooter({
         </div>
         
         <div className="text-center text-sm font-medium text-veil-muted">
-          &copy; 2024 Veil. Making creator support private and friendly.
+          &copy; 2026 Veil. Making creator support private and friendly.
         </div>
       </div>
     </footer>
