@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import { NONCE_EXPIRES_MINUTES } from "@/lib/constants";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  console.log("HIT /api/auth/nonce route handler");
   try {
     let body: unknown;
     try {
