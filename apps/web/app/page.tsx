@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { HeartHandshake, EyeOff, FileCheck2, Banknote, Smartphone, Wand2, Gem } from "lucide-react";
+import { HeartHandshake, EyeOff, FileCheck2, Banknote, Smartphone, Wand2, Gem, LayoutDashboard } from "lucide-react";
 import VeilHeader from "@/components/VeilHeader";
 import VeilFooter from "@/components/VeilFooter";
 
@@ -55,7 +55,13 @@ export default function LandingPage() {
                 Explore creators
               </Link>
             </div>
-            <p className="text-sm text-veil-muted mt-6 font-semibold flex items-center gap-1">
+            <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 w-full sm:w-auto">
+              <Link href="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-full border border-black/10 bg-white text-veil-text font-bold text-base hover:border-veil-primary hover:text-veil-primary transition-all shadow-sm hover:shadow-md">
+                <LayoutDashboard className="w-4 h-4" />
+                Creator Login
+              </Link>
+            </div>
+            <p className="text-sm text-veil-muted mt-4 font-semibold flex items-center gap-1">
               <span className="text-yellow-500">⚡</span> 
               Takes less than 2 minutes to set up. Built on Solana.
             </p>
@@ -71,17 +77,14 @@ export default function LandingPage() {
           >
             <div className="relative w-full max-w-lg aspect-square">
               <div className="absolute inset-0 bg-veil-secondary rounded-[40px] transform rotate-3 animate-[wiggle_4s_ease-in-out_infinite]"></div>
-              <div className="absolute inset-0 bg-white rounded-[40px] transform -rotate-3 border-2 border-black/5 shadow-card transition-transform duration-500 hover:rotate-0"></div>
-              
               <img 
-                src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/6c2befa4-979c-4ddc-89b3-1eb258b6af07.webp" 
-                alt="Playful creator illustration" 
-                className="relative z-10 w-full h-full object-contain p-8 animate-float"
-                style={{ animation: 'float 6s ease-in-out infinite' }}
+                src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/0d868fef-f560-45ca-ab35-5dad4fc29059_3840w.webp" 
+                alt="Creator portrait" 
+                className="relative z-10 w-full h-full object-cover rounded-[40px] shadow-sm transform -rotate-3 transition-transform duration-500 hover:rotate-0"
               />
               
               <div className="absolute top-12 -left-6 bg-white border border-black/10 pr-5 pl-2 py-2 rounded-full flex items-center gap-3 z-20 shadow-lg transform -rotate-6 animate-[float_6s_ease-in-out_3s_infinite]">
-                <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/880ac24b-ee1f-4bf4-94da-43bd99f721b0.webp" alt="Fan" className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" />
+                <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/2f563338-39fa-47ea-9761-658d4f3f84db_1600w.jpg" alt="Fan" className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" />
                 <span className="font-bold text-veil-text text-sm">Someone tipped $5!</span>
               </div>
               
@@ -183,7 +186,7 @@ export default function LandingPage() {
                   icon: <Smartphone className="w-16 h-16 text-veil-primary" />,
                   title: "Fan connects",
                   desc: "Your supporter clicks \"Tip\" and securely connects their wallet.",
-                  image: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/01c7a345-6b8a-4f06-9142-83d1b4192885.webp",
+                  image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/eca707cc-a5b7-439a-b4fd-247f6106c2e1_1600w.jpg",
                   bg: "bg-white",
                   rotation: "-rotate-3",
                   delay: 0
@@ -202,7 +205,7 @@ export default function LandingPage() {
                   icon: <Gem className="w-16 h-16 text-green-500" />,
                   title: "You get paid",
                   desc: "The funds land in your account. You can hold them or cash out to your bank.",
-                  image: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/cd5270d9-37d2-4ac4-94af-aabfc28b962e.webp",
+                  image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/77415a2e-dcbc-4748-a29d-fced4821881a_1600w.jpg",
                   bg: "bg-white",
                   rotation: "-rotate-3",
                   delay: 0.4
@@ -258,7 +261,7 @@ export default function LandingPage() {
                 {
                   name: "Sarah Jenkins",
                   role: "Fiber Artist",
-                  img: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/e1420747-0876-4400-836d-4fc1805dc264.webp",
+                  img: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4f5668c5-fc4a-44e0-bc5e-a664189d3c31_1600w.jpg",
                   text: "I used to hate how my earnings were public knowledge on the blockchain. Veil gave me back my peace of mind. Now my fans can tip me, and only I know about it.",
                   bg: "bg-veil-bg",
                   delay: 0
@@ -266,7 +269,7 @@ export default function LandingPage() {
                 {
                   name: "Elena R.",
                   role: "Digital Illustrator",
-                  img: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/19889982-6a06-4417-b844-394927250641.webp",
+                  img: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c92852bb-a510-405a-85ab-ffa0fde136a4_1600w.jpg",
                   text: "The cash out feature is a total lifesaver. I get all the benefits of fast crypto tips from my international fans, but the money just shows up in my regular bank account.",
                   bg: "bg-[#eef4ff]",
                   delay: 0.1
@@ -274,7 +277,7 @@ export default function LandingPage() {
                 {
                   name: "Marcus T.",
                   role: "Tech Educator",
-                  img: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/9775cb4c-f9db-4c4f-b992-cd6cdb5d89d1.webp",
+                  img: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/eca707cc-a5b7-439a-b4fd-247f6106c2e1_1600w.jpg",
                   text: "When I applied for an apartment, I needed to prove my creator income. Veil let me generate a completely official report without doxxing a single one of my supporters. Pure magic.",
                   bg: "bg-[#fbf7f1]",
                   delay: 0.2
@@ -319,8 +322,8 @@ export default function LandingPage() {
               <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
               <div className="absolute -bottom-10 -right-10 w-56 h-56 bg-blue-900/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
               
-              <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/c9f693cd-59f7-4d4c-9faa-f0b465ed7c3d.webp" alt="Creator overlay" className="absolute top-10 left-10 w-16 h-16 rounded-full border-4 border-white/20 opacity-40 animate-float" />
-              <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/e7763cef-6327-4188-a47e-4d96a46820ac.webp" alt="Creator overlay" className="absolute bottom-10 right-20 w-12 h-12 rounded-full border-4 border-white/20 opacity-40 animate-float-delayed" />
+              <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/3186f9ea-5f5a-49f7-8fcf-568ad52f515e_3840w.webp" alt="Creator overlay" className="absolute top-10 left-10 w-16 h-16 rounded-full object-cover border-4 border-white/20 opacity-40 animate-float" />
+              <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/65695f80-23f9-46ee-8487-cbb6c93cc48b_3840w.webp" alt="Creator overlay" className="absolute bottom-10 right-20 w-12 h-12 rounded-full object-cover border-4 border-white/20 opacity-40 animate-float-delayed" />
 
               <div className="relative z-10 max-w-2xl mx-auto">
                 <h2 className="font-heading text-4xl md:text-5xl font-black mb-6 text-white">

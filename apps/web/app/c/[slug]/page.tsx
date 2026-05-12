@@ -106,7 +106,7 @@ export default function CreatorPage({ params }: { params: Promise<{ slug: string
               >
                 <div className="h-40 w-full bg-gradient-to-tr from-[#ff9a9e] via-[#fecfef] to-[#a1c4fd]"></div>
                 <div className="px-8 pb-8 relative">
-                  <div className="absolute -top-16 left-8 w-32 h-32 rounded-full border-4 border-white shadow-lg bg-white overflow-hidden">
+                  <div className="absolute -top-12 left-8 w-24 h-24 rounded-full border-4 border-white shadow-lg bg-white overflow-hidden">
                     {creator.avatarUrl ? (
                       <img src={creator.avatarUrl} alt={creator.displayName} className="w-full h-full object-cover" />
                     ) : (
@@ -120,7 +120,7 @@ export default function CreatorPage({ params }: { params: Promise<{ slug: string
                       <Share2 className="w-5 h-5" />
                     </button>
                   </div>
-                  <div className="">
+                  <div className="pt-16">
                     <h1 className="font-heading text-3xl md:text-4xl font-black text-veil-text mb-2">{creator.displayName}</h1>
                     <p className="text-lg font-bold text-veil-primary mb-4">{creator.category} Creator 🎨</p>
                     <div className="flex flex-wrap gap-2 mb-6">
@@ -148,9 +148,13 @@ export default function CreatorPage({ params }: { params: Promise<{ slug: string
                   <ImageIcon className="w-6 h-6 text-veil-primary" /> Recent Work
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {[1, 2, 3].map((i) => (
+                  {[
+                    "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg",
+                    "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/e534354d-c5f2-4399-a1d9-2f50338e8c47_1600w.jpg",
+                    "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/d14dc069-558a-4c51-8aad-5cc237f9b61d_1600w.jpg"
+                  ].map((src, i) => (
                     <div key={i} className="aspect-square rounded-2xl overflow-hidden group relative bg-veil-bg">
-                      <img src="https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/6c2befa4-979c-4ddc-89b3-1eb258b6af07.webp" alt="Artwork" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 p-4" />
+                      <img src={src} alt="Artwork" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
                   ))}
                 </div>
@@ -172,9 +176,9 @@ export default function CreatorPage({ params }: { params: Promise<{ slug: string
                 </div>
                 <div className="space-y-6">
                   {[
-                    { name: "Jessie M.", amount: 15, text: "Absolutely love the new procreate brush set! It's saved me so much time on my comic backgrounds. Keep up the amazing work Maya! ✨", img: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/19889982-6a06-4417-b844-394927250641.webp", time: "2 hours ago" },
+                    { name: "Jessie M.", amount: 15, text: "Absolutely love the new procreate brush set! It's saved me so much time on my comic backgrounds. Keep up the amazing work Maya! ✨", img: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4f5668c5-fc4a-44e0-bc5e-a664189d3c31_1600w.jpg", time: "2 hours ago" },
                     { name: "Anonymous", amount: 5, text: "Thanks for the free tutorials on YouTube! They are super helpful for beginners like me.", img: null, time: "1 day ago" },
-                    { name: "David K.", amount: 25, text: "Here's to more amazing art! 🥂", img: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/e7763cef-6327-4188-a47e-4d96a46820ac.webp", time: "3 days ago" },
+                    { name: "David K.", amount: 25, text: "Here's to more amazing art! 🥂", img: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c92852bb-a510-405a-85ab-ffa0fde136a4_1600w.jpg", time: "3 days ago" },
                   ].map((msg, i) => (
                     <div key={i} className="flex gap-4 p-4 rounded-2xl hover:bg-veil-bg transition-colors group">
                       <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden border-2 border-white shadow-sm bg-veil-secondary flex items-center justify-center">
@@ -199,7 +203,7 @@ export default function CreatorPage({ params }: { params: Promise<{ slug: string
             </div>
             <div className="lg:col-span-5">
               <div className="sticky top-28 space-y-6">
-                <div className="bg-white rounded-[32px] p-8 shadow-card border border-black/5 border-t-4 border-t-veil-primary" style={{ animation: 'wiggle 4s ease-in-out infinite' }}>
+                <div className="bg-white rounded-[32px] p-8 shadow-card border border-black/5 border-t-4 border-t-veil-primary">
                   <h2 className="font-heading text-2xl font-black text-veil-text mb-2">Support {creator.displayName}</h2>
                   <p className="text-veil-muted font-medium mb-6">Fund their next creative project securely & privately.</p>
                   <div className="mb-6">
