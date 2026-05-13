@@ -16,15 +16,14 @@ export function ClaimPanel({ onClaimed }: { onClaimed: () => void }) {
   const handleScanAndClaim = async () => {
     try {
       setStatus("scanning");
-      // Optionally read startIndex from localStorage here
-      //const result = await scanAndClaim(0, 0);
       const result = await scanAndClaim(0n, 0n);
 
       setLastResult(result);
-      
+
       if (result.claimed > 0) {
+        // Mark events as claimed in the DB
+        await fetch("/api/events/claim-all", { method: "POST" });
         toast.success(`Successfully claimed ${result.claimed} payments!`);
-        // Notify backend to update events as claimed
         onClaimed();
       } else {
         toast.info("No new payments found.");

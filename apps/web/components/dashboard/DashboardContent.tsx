@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useEncryptedBalance } from "@/lib/umbra/useEncryptedBalance";
 import { useClaim } from "@/lib/umbra/useClaim";
 import { useViewingKey } from "@/lib/umbra/useViewingKey";
+import { useWithdraw } from "@/lib/umbra/useWithdraw";
 import { 
   Wallet, 
   TrendingUp, 
@@ -41,9 +42,11 @@ export function DashboardContent() {
   const { getBalance } = useEncryptedBalance();
   const { scanAndClaim } = useClaim();
   const { deriveMonthly, deriveYearly } = useViewingKey();
+  const { withdraw } = useWithdraw();
 
   const [encryptedBalance, setEncryptedBalance] = useState<bigint | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const fetchDashboard = async () => {
     try {
@@ -85,6 +88,24 @@ export function DashboardContent() {
       toast.error(err.message || "Failed to claim payments");
     } finally {
       setIsClaiming(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!encryptedBalance || encryptedBalance === 0n) {
+      toast.info("No balance to withdraw.");
+      return;
+    }
+    try {
+      setIsWithdrawing(true);
+      toast.info("Withdrawing to wallet... this may take 5–15 seconds.");
+      await withdraw(encryptedBalance);
+      toast.success("Funds withdrawn to your Solflare wallet!");
+      await fetchBalance();
+    } catch (err: any) {
+      toast.error(err.message || "Withdrawal failed.");
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -319,8 +340,12 @@ export function DashboardContent() {
                   </>
                 )}
               </button>
-              <button className="w-full pill-button-secondary bg-transparent border-black/20 hover:bg-white px-6 py-3.5 text-base flex items-center justify-center gap-2 text-veil-muted">
-                <span>SOL</span> Transfer Crypto
+              <button
+                onClick={handleWithdraw}
+                disabled={isWithdrawing || !encryptedBalance || encryptedBalance === 0n}
+                className="w-full pill-button-secondary bg-transparent border-black/20 hover:bg-white px-6 py-3.5 text-base flex items-center justify-center gap-2 text-veil-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isWithdrawing ? "Withdrawing..." : "Withdraw to Wallet"}
               </button>
             </div>
           </motion.section>

@@ -29,7 +29,8 @@ export async function initUmbraClient(wallet: IUmbraSigner) {
       rpcUrl: DEVNET_RPC,
       rpcSubscriptionsUrl: DEVNET_WSS,
       indexerApiEndpoint: "https://utxo-indexer.api-devnet.umbraprivacy.com",
-      deferMasterSeedSignature: true,
+      // deferMasterSeedSignature: false (default) — derive master seed at client init
+      // so the X25519 key is ready before dashboard queries encrypted balance.
     },
     {
       transactionForwarder,

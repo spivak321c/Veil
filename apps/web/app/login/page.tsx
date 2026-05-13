@@ -90,27 +90,28 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex-grow flex flex-col pt-16 px-4">
+    <div className="min-h-screen flex flex-col">
       <VeilHeader />
-      <div className="max-w-[1200px] mx-auto w-full flex-grow flex items-center justify-center">
+      <main className="flex-1 flex items-center justify-center px-4 py-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-[480px] w-full bg-canvas border border-iron/10 rounded-[32px] p-[40px] shadow-sm relative overflow-hidden"
+          transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
+          className="w-full max-w-[440px] bg-veil-surface rounded-[32px] p-10 shadow-sm border border-black/5 relative overflow-hidden"
         >
-          <div className="text-center mb-[40px]">
-            <div className="w-[64px] h-[64px] bg-ink text-canvas rounded-full flex items-center justify-center mx-auto mb-[24px]">
-              <Lock className="w-[28px] h-[28px]" />
+          <div className="text-center mb-10">
+            <div className="w-16 h-16 bg-veil-text text-veil-surface rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-7 h-7" />
             </div>
-            <h1 className="text-[32px] font-medium tracking-tight text-ink mb-[12px]">
-              Creator Login
+            <h1 className="text-[28px] font-heading font-black tracking-tight text-veil-text mb-3">
+              Sign in
             </h1>
-            <p className="text-iron text-[16px]">
+            <p className="text-veil-muted text-[15px] leading-relaxed">
               Connect your wallet and sign a message to access your dashboard.
             </p>
           </div>
 
-          <div className="flex flex-col gap-[16px]">
+          <div className="flex flex-col gap-4">
             {!connected ? (
               <div className="flex justify-center">
                 <ConnectButton />
@@ -119,31 +120,34 @@ export default function LoginPage() {
               <button
                 onClick={handleSignIn}
                 disabled={isAuthenticating}
-                className="w-full flex items-center justify-center gap-[12px] h-[56px] rounded-[30px] bg-sky-blue text-white font-medium text-[16px] hover:bg-sky-blue/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed group"
+                className="pill-button-primary w-full flex items-center justify-center gap-2.5 h-[54px] text-[16px] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:hover:shadow-none group"
               >
                 {isAuthenticating ? (
                   <>
-                    <Loader2 className="w-[20px] h-[20px] animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     Authenticating...
                   </>
                 ) : (
                   <>
                     Sign In
-                    <ArrowRight className="w-[20px] h-[20px] group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
             )}
 
-            <p className="text-center text-[14px] text-iron mt-[16px]">
+            <p className="text-center text-[14px] text-veil-muted mt-4">
               Don&apos;t have an account?{" "}
-              <Link href="/onboard" className="text-sky-blue hover:underline">
+              <Link
+                href="/onboard"
+                className="text-veil-primary font-bold hover:underline"
+              >
                 Register here
               </Link>
             </p>
           </div>
         </motion.div>
-      </div>
+      </main>
       <VeilFooter />
     </div>
   );

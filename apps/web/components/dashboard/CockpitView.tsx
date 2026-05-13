@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEncryptedBalance } from "@/lib/umbra/useEncryptedBalance";
 import { useClaim } from "@/lib/umbra/useClaim";
 import { useViewingKey } from "@/lib/umbra/useViewingKey";
-import { ShieldCheck, ArrowsClockwise, Key, TrendUp, DownloadSimple } from "@phosphor-icons/react";
+import { ShieldCheck, ArrowsClockwise, Key, TrendUp, DownloadSimple, ArrowLineDown } from "@phosphor-icons/react";
 import { formatMicroUsdc } from "@/lib/constants";
 import { EventFeed } from "@/components/creator/EventFeed";
 import type { CreatorFull } from "@veil/db";
 import { toast } from "sonner";
+import { useWithdraw } from "@/lib/umbra/useWithdraw";
 
 export function CockpitView() {
   const [data, setData] = useState<CreatorFull | null>(null);
@@ -18,10 +19,12 @@ export function CockpitView() {
   // Umbra SDK
   const { getBalance } = useEncryptedBalance();
   const { scanAndClaim } = useClaim();
+  const { withdraw } = useWithdraw();
   const { deriveMonthly, deriveYearly } = useViewingKey();
 
   const [encryptedBalance, setEncryptedBalance] = useState<bigint | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const fetchDashboard = async () => {
     try {
@@ -65,6 +68,24 @@ export function CockpitView() {
       toast.error(err.message || "Failed to claim payments");
     } finally {
       setIsClaiming(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!encryptedBalance || encryptedBalance === 0n) {
+      toast.info("No balance to withdraw.");
+      return;
+    }
+    try {
+      setIsWithdrawing(true);
+      toast.info("Withdrawing to wallet... this may take 5–15 seconds.");
+      await withdraw(encryptedBalance);
+      toast.success("Funds withdrawn to your Solflare wallet!");
+      await fetchBalance();
+    } catch (err: any) {
+      toast.error(err.message || "Withdrawal failed.");
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -141,7 +162,26 @@ export function CockpitView() {
             <div className="font-sans text-display font-light text-ink tracking-[-2px] mb-[8px] leading-[1.0]">
               ${encryptedBalance !== null ? formatMicroUsdc(Number(encryptedBalance)) : "---"}
             </div>
-            <div className="text-[15px] text-silver-thread">USDC secured via Umbra</div>
+            <div className="text-[15px] text-silver-thread mb-[24px]">USDC secured via Umbra</div>
+            <button
+              onClick={handleWithdraw}
+              disabled={isWithdrawing || !encryptedBalance || encryptedBalance === 0n}
+              className="flex items-center gap-[8px] text-[14px] font-medium text-iron hover:text-ink disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none"
+            >
+              {isWithdrawing ? (
+                <>
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                    <ArrowsClockwise weight="bold" className="w-[16px] h-[16px]" />
+                  </motion.div>
+                  Withdrawing...
+                </>
+              ) : (
+                <>
+                  <ArrowLineDown weight="bold" className="w-[16px] h-[16px]" />
+                  Withdraw to Wallet
+                </>
+              )}
+            </button>
           </div>
         </div>
 
