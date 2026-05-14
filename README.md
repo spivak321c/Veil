@@ -1,6 +1,8 @@
-# Veil
+# Veil — Private Patronage for Solana Creators
 
-**Private patronage for Solana creators.** Fans support their favorite creators without exposing their wallet address or transaction history. Creators receive payments into encrypted balances — their total revenue is invisible to on-chain observers, yet provable to accountants via time-scoped viewing keys.
+**Umbra SDK Hackathon Submission**
+
+Veil brings real financial privacy to creator patronage on Solana. Fans can support their favorite creators without exposing their wallet or transaction history. Creators receive payments into encrypted balances — their total revenue is invisible to on-chain observers, yet provable to accountants or sponsors via time-scoped viewing keys.
 
 Built on the [Umbra Privacy SDK](https://github.com/UmbraPrivacy/sdk) and Arcium MPC.
 
@@ -8,21 +10,27 @@ Built on the [Umbra Privacy SDK](https://github.com/UmbraPrivacy/sdk) and Arcium
 
 ## The Problem
 
-Every Solana transaction is public. When a fan tips a creator, anyone can see who sent what, when, and to whom. This creates three real problems:
+Every Solana transaction is public. When a fan tips a creator, anyone can see who sent what, when, and to whom. This creates three real problems that Veil solves:
 
-1. **Fan exposure** — Supporters' wallet addresses and spending patterns become public knowledge. Financial privacy shouldn't be the cost of being generous.
-2. **Creator exposure** — A creator's total on-chain income is visible to everyone: competitors, landlords, estranged family, anyone. Public income creates real-world safety and negotiating disadvantages.
-3. **Compliance friction** — Privacy tools that make income invisible also make it impossible to prove income for taxes, sponsors, or loan applications. Creators are forced to choose between privacy and legitimacy.
+1. **Fan exposure** — Supporters' wallet addresses and spending patterns become public knowledge. Financial privacy should not be the cost of being generous.
+2. **Creator exposure** — A creator's total on-chain income is visible to everyone: competitors, landlords, anyone. Public income creates real-world safety and negotiating disadvantages.
+3. **Compliance friction** — Privacy tools that make income invisible also make it impossible to prove income for taxes, sponsors, or loan applications. Creators are forced to choose between privacy and legitimacy. Veil solves this with viewing keys that prove income without exposing patron identities.
 
-## Target Users
+## Target Users & Use Cases
 
-- **Creators** (artists, writers, educators, streamers) who accept tips and patronage on Solana and want their income to remain private
-- **Fans/Patrons** who want to support creators without broadcasting their wallet activity
-- **Accountants and sponsors** who need verified income statements without seeing individual patron identities
+| User | Need | How Veil Helps |
+|------|------|----------------|
+| **Creators** (artists, writers, streamers, educators) | Accept tips/patronage without broadcasting income | Encrypted balances + viewing keys for selective disclosure |
+| **Fans/Patrons** | Support creators privately | Stealth address tips — no link between patron wallet and creator |
+| **Accountants / Sponsors** | Verify creator income | Time-scoped viewing keys reveal totals, not individual patrons |
+
+**Use cases:** Private tipping on streaming pages, membership/subscription payments, pay-what-you-want content, grant disbursements with privacy.
+
+---
 
 ## How Veil Uses the Umbra SDK
 
-The Umbra SDK is not a peripheral dependency — it is the core privacy engine. Every payment on Veil flows through Umbra's cryptographic primitives:
+The Umbra SDK is the core privacy engine. Every payment on Veil flows through its cryptographic primitives. The SDK is not a peripheral dependency — removing it would break the entire product.
 
 ### 1. Stealth Address Generation (Patron → Creator)
 
@@ -45,7 +53,7 @@ const result = await createUtxo({
 
 ### 2. UTXO Scanning & Encrypted Balance Claiming (Creator)
 
-Creators scan the Umbra Merkle tree for UTXOs assigned to their stealth addresses. The SDK's scanner returns four buckets — `received`, `publicReceived`, `selfBurnable`, `publicSelfBurnable` — based on the funding source. Veil claims receiver-claimable UTXOs (both `received` and `publicReceived`) directly into an **encrypted balance** powered by Arcium MPC. The claim never exposes the creator's wallet address or the payment amount on-chain.
+Creators scan the Umbra Merkle tree for UTXOs assigned to their stealth addresses. The SDK's scanner returns four buckets — `received`, `publicReceived`, `selfBurnable`, `publicSelfBurnable`. Veil merges receiver-claimable buckets and claims into an **encrypted balance** powered by Arcium MPC. The claim never exposes the creator's wallet address or the payment amount on-chain.
 
 ```typescript
 // apps/web/lib/umbra/useClaim.ts
@@ -62,7 +70,6 @@ await claim(allReceived);
 ```
 
 **SDK functions used:** `getClaimableUtxoScannerFunction`, `getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction`, `getUmbraRelayer`
-
 **ZK prover:** `getClaimReceiverClaimableUtxoIntoEncryptedBalanceProver` from `@umbra-privacy/web-zk-prover`
 
 ### 3. Encrypted Balance Queries
@@ -91,7 +98,7 @@ const key = await derive(USDC_MINT, year, month);
 
 ### 5. Wallet Registration
 
-Both patrons and creators must register with Umbra (one-time) to enable stealth payments and encrypted balances. Registration creates an on-chain user account, registers an X25519 public key for stealth address derivation, and optionally enables the anonymous usage flag.
+Both patrons and creators must register with Umbra (one-time) to enable stealth payments and encrypted balances. Registration creates an on-chain user account and registers an X25519 public key for stealth address derivation.
 
 ```typescript
 // apps/web/lib/umbra/useUmbraRegistration.ts
@@ -132,6 +139,17 @@ const client = await getUmbraClient(
 
 ---
 
+## Innovation & Differentiation
+
+Unlike privacy tools that make everything invisible (breaking compliance) or nothing private (breaking user trust), Veil introduces **selective disclosure** for creator income. The viewing key system is the key differentiator:
+
+- **Existing solutions:** Public tips (no privacy) OR fully anonymous donations (no proof of income)
+- **Veil:** Private-by-default with optional, granular transparency — income is invisible to the public but provable to trusted parties on demand
+
+This unlocks a category that neither fully-public nor fully-anonymous systems can serve: creators who want both privacy and professional legitimacy.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -151,19 +169,10 @@ bun install
 ### 2. Configure environment
 
 ```bash
-cp apps/web/.env apps/web/.env.local
+cp apps/web/.env.example apps/web/.env.local
 ```
 
-Edit `.env.local` with your values. The defaults work for devnet out of the box:
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SOLANA_RPC_URL` | Yes | Solana devnet RPC endpoint |
-| `NEXT_PUBLIC_SOLANA_WSS_URL` | Yes | Solana devnet WebSocket endpoint |
-| `NEXT_PUBLIC_USDC_MINT` | Yes | Umbra dUSDC mint address (default: `4oG4sjmopf5MzvTHLE8rpVJ2uyczxfsw2K84SUTpNDx7`) |
-| `DATABASE_URL` | Yes | PostgreSQL connection string (Supabase, Neon, or local) |
-| `JWT_SECRET` | Yes | Session signing key (`openssl rand -hex 32`) |
-| `FUNDER_KEYPAIR_PATH` | No | Server-side devnet funder keypair (for faucet API) |
+Edit `.env.local` with your values. The defaults work for devnet out of the box.
 
 ### 3. Set up the database
 
@@ -196,10 +205,44 @@ Open [http://localhost:3000](http://localhost:3000).
 | `bun run build` | Production build |
 | `bun run start` | Start production server |
 | `bun run lint` | Run ESLint |
-| `bun run typecheck` | Run TypeScript type checker (`tsc --noEmit`) |
+| `bun run typecheck` | Run TypeScript type checker |
 | `bun run fund:sol` | Airdrop devnet SOL to funder wallet |
 | `bun run fund:usdc` | Mint devnet dUSDC to funder wallet |
 | `bun run fund:demo` | Fund demo creator wallets |
+
+---
+
+## Deployed Frontend & Program IDs
+
+| Resource | URL/Address |
+|----------|-------------|
+| **Frontend (Vercel)** | [https://veil-umbra.vercel.app](https://veil-umbra.vercel.app) |
+| **Umbra Indexer** | `https://utxo-indexer.api-devnet.umbraprivacy.com` |
+| **Umbra Relayer** | `https://relayer.api-devnet.umbraprivacy.com` |
+| **dUSDC Mint** | `4oG4sjmopf5MzvTHLE8rpVJ2uyczxfsw2K84SUTpNDx7` |
+| **Umbra Faucet** | [https://faucet.umbraprivacy.com](https://faucet.umbraprivacy.com) |
+
+> **Important:** You must use Umbra's dUSDC, not standard devnet USDC. Umbra's devnet stealth pool is only initialized for the dUSDC mint above.
+
+---
+
+## Testing the Flow End-to-End
+
+### As a Patron (sending a tip)
+
+1. Visit a creator's public page at `/c/{slug}`
+2. Connect your Solana wallet (set to devnet)
+3. Ensure you have devnet SOL and dUSDC
+4. Select a tip amount and click "Tip"
+5. Approve the wallet transaction — the SDK handles registration (if first time), ZK proof generation, UTXO creation, and the Arcium MPC callback automatically
+
+### As a Creator (claiming payments)
+
+1. Connect your wallet and log in to the dashboard at `/dashboard`
+2. Complete Umbra registration if you haven't already (one-time)
+3. Click "Claim Payments" — the SDK scans the Merkle tree for your UTXOs and claims them into your encrypted balance
+4. View your encrypted balance on the dashboard
+5. Generate a viewing key at `/dashboard/compliance` for tax or sponsor reporting
 
 ---
 
@@ -226,7 +269,7 @@ Veil/
 │   │       ├── events/          # Payment event recording + claim-all
 │   │       └── devnet/faucet/   # Devnet SOL airdrop API
 │   ├── lib/
-│   │   ├── umbra/               # ← Core Umbra integration layer
+│   │   ├── umbra/               # Core Umbra integration layer
 │   │   │   ├── client.ts        # Umbra client init (polling forwarders)
 │   │   │   ├── store.ts         # Zustand store for client state
 │   │   │   ├── useClaim.ts      # Scan Merkle tree + claim into encrypted balance
@@ -240,7 +283,7 @@ Veil/
 │   │   ├── middleware.ts        # Route protection
 │   │   └── validation.ts        # Zod schemas
 │   ├── components/
-│   │   ├── umbra/               # ← Privacy UI components
+│   │   ├── umbra/               # Privacy UI components
 │   │   │   ├── UmbraProvider.tsx # Wallet→SDK signer bridge (reactive init)
 │   │   │   ├── SendFlow.tsx     # Shielded transfer modal with step tracking
 │   │   │   ├── ClaimPanel.tsx   # Scan + claim interface
@@ -262,45 +305,9 @@ Veil/
 ### Key Design Decisions
 
 - **Claim into encrypted balance, not public wallet.** The claim flow uses `getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction` so funds remain invisible on-chain. This is the fundamental privacy property — without it, claiming a stealth UTXO would re-associate the creator with the payment.
-- **Polling forwarders over WebSocket.** Solana devnet's WebSocket subscriptions are unreliable (frequent 503s). The Umbra client is initialized with `getPollingTransactionForwarder` and `getPollingComputationMonitor` for transaction forwarding and MPC callback monitoring.
-- **Four-bucket scan results.** The SDK's `ScannedUtxoResult` returns four arrays: `received`, `publicReceived`, `selfBurnable`, `publicSelfBurnable`. Patron tips sent from public ATAs land in `publicReceived`, not `received`. Veil merges both receiver-claimable buckets before claiming.
-- **Wallet-standard wallet connection.** Veil uses `@solana/react-hooks` with wallet-standard for wallet discovery and connection, then bridges the wallet session into an `IUmbraSigner` in `UmbraProvider.tsx`.
-- **SIWS authentication.** Creator sessions use Solana's Sign-In With Solana (SIWS) spec, with JWT cookies for server-side route protection.
-
----
-
-## Devnet Configuration
-
-Veil runs on **Solana devnet** with Umbra's devnet infrastructure:
-
-| Service | URL |
-|---------|-----|
-| Umbra Indexer | `https://utxo-indexer.api-devnet.umbraprivacy.com` |
-| Umbra Relayer | `https://relayer.api-devnet.umbraprivacy.com` |
-| dUSDC Mint | `4oG4sjmopf5MzvTHLE8rpVJ2uyczxfsw2K84SUTpNDx7` |
-| Umbra Faucet | [https://faucet.umbraprivacy.com](https://faucet.umbraprivacy.com) |
-
-> **Important:** You must use Umbra's dUSDC, not the standard devnet USDC. Umbra's devnet stealth pool is only initialized for the dUSDC mint above.
-
----
-
-## Testing the Flow End-to-End
-
-### As a Patron (sending a tip)
-
-1. Visit a creator's public page at `/c/{slug}`
-2. Connect your Solana wallet (set to devnet)
-3. Ensure you have devnet SOL and dUSDC
-4. Select a tip amount and click "Tip"
-5. Approve the wallet transaction — the SDK handles registration (if first time), ZK proof generation, UTXO creation, and the Arcium MPC callback automatically
-
-### As a Creator (claiming payments)
-
-1. Connect your wallet and log in to the dashboard at `/dashboard`
-2. Complete Umbra registration if you haven't already (one-time)
-3. Click "Claim Payments" — the SDK scans the Merkle tree for your UTXOs and claims them into your encrypted balance
-4. View your encrypted balance on the dashboard
-5. Generate a viewing key at `/dashboard/compliance` for tax or sponsor reporting
+- **Polling forwarders over WebSocket.** Solana devnet's WebSocket subscriptions are unreliable (frequent 503s). The Umbra client is initialized with polling forwarders for transaction and MPC callback monitoring.
+- **Four-bucket scan handling.** The SDK returns `received`, `publicReceived`, `selfBurnable`, `publicSelfBurnable`. Tips from public ATAs land in `publicReceived`; Veil merges both receiver-claimable buckets before claiming.
+- **SIWS authentication.** Creator sessions use Sign-In With Solana with JWT cookies for server-side route protection.
 
 ---
 
@@ -312,22 +319,33 @@ Veil runs on **Solana devnet** with Umbra's devnet infrastructure:
 | Privacy | `@umbra-privacy/sdk` v4, `@umbra-privacy/web-zk-prover` v2 |
 | Blockchain | Solana devnet, `@solana/kit`, `@solana/react-hooks` |
 | State | Zustand |
-| Auth | SIWS (Sign-In With Solana) + JWT |
+| Auth | SIWS + JWT |
 | Database | PostgreSQL (Supabase) + Prisma ORM |
 | Styling | Tailwind CSS v4 |
-| Animation | Framer Motion |
 | Runtime | Bun |
 
 ---
 
 ## Project Status
 
-This is a hackathon prototype built for the Umbra SDK Hackathon. The core privacy flow (send → scan → claim → encrypted balance → viewing keys) is functional on devnet. Known limitations:
+This is a hackathon prototype for the Umbra SDK Hackathon. The core privacy flow (send → scan → claim → encrypted balance → viewing keys) is functional on devnet.
+
+### Known Limitations
 
 - **Devnet only** — no mainnet deployment yet
 - **Single token** — dUSDC only (Umbra devnet pool constraint)
-- **No off-ramp** — the "crypto to cash" feature described on the landing page is aspirational
-- **Event tracking is server-side** — payment events are recorded in PostgreSQL for the dashboard; on-chain event indexing would be more robust
+- **No off-ramp** — the "crypto to cash" flow is aspirational
+- **Event tracking is server-side** — payment events are recorded in PostgreSQL; on-chain indexing would be more robust long-term
+
+---
+
+## Demo
+
+A short video walkthrough is included in the submission demonstrating:
+- Creator onboarding and Umbra registration
+- Sending a private tip as a patron
+- Claiming UTXOs into an encrypted balance
+- Generating and exporting a viewing key for compliance
 
 ---
 
