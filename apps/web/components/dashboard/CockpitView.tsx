@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEncryptedBalance } from "@/lib/umbra/useEncryptedBalance";
 import { useClaim } from "@/lib/umbra/useClaim";
 import { useViewingKey } from "@/lib/umbra/useViewingKey";
-import { ShieldCheck, ArrowsClockwise, Key, TrendUp, DownloadSimple, ArrowLineDown } from "@phosphor-icons/react";
+import { ShieldCheck, ArrowsClockwise, Key, TrendUp, DownloadSimple, ArrowLineDown, PauseCircle, PlayCircle } from "@phosphor-icons/react";
 import { formatMicroUsdc } from "@/lib/constants";
 import { EventFeed } from "@/components/creator/EventFeed";
 import type { CreatorFull } from "@veil/db";
 import { toast } from "sonner";
 import { useWithdraw } from "@/lib/umbra/useWithdraw";
+import { useConvertToShared } from "@/lib/umbra/useConvertToShared";
+import type { Address } from "@solana/kit";
 
 export function CockpitView() {
   const [data, setData] = useState<CreatorFull | null>(null);
@@ -19,12 +21,21 @@ export function CockpitView() {
   // Umbra SDK
   const { getBalance } = useEncryptedBalance();
   const { scanAndClaim } = useClaim();
+  const { convertToShared } = useConvertToShared();
   const { withdraw } = useWithdraw();
   const { deriveMonthly, deriveYearly } = useViewingKey();
+  const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT;
 
   const [encryptedBalance, setEncryptedBalance] = useState<bigint | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [claimStartedAt, setClaimStartedAt] = useState<number | null>(null);
+  const [claimElapsedSec, setClaimElapsedSec] = useState(0);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [isPollingPaused, setIsPollingPaused] = useState(false);
+  const pollingPausedRef = useRef(false);
+  const pollingPendingRef = useRef(false);
 
   const fetchDashboard = async () => {
     try {
@@ -45,19 +56,65 @@ export function CockpitView() {
     if (bal !== null) setEncryptedBalance(bal);
   };
 
+  const refreshDashboard = async () => {
+    setIsRefreshingBalance(true);
+    await Promise.allSettled([fetchDashboard(), fetchBalance()]);
+    setLastRefreshed(new Date());
+    setIsRefreshingBalance(false);
+  };
+
   useEffect(() => {
     fetchDashboard();
     fetchBalance();
   }, []);
 
+  const fetchDashboardRef = useRef(fetchDashboard);
+  const fetchBalanceRef = useRef(fetchBalance);
+  useEffect(() => {
+    fetchDashboardRef.current = fetchDashboard;
+    fetchBalanceRef.current = fetchBalance;
+  });
+
+  const togglePolling = () => {
+    const next = !pollingPausedRef.current;
+    pollingPausedRef.current = next;
+    setIsPollingPaused(next);
+  };
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (pollingPausedRef.current || pollingPendingRef.current) return;
+      pollingPendingRef.current = true;
+      await Promise.allSettled([
+        fetchDashboardRef.current(),
+        fetchBalanceRef.current(),
+      ]);
+      pollingPendingRef.current = false;
+      setLastRefreshed(new Date());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleClaim = async () => {
+    const wasPaused = pollingPausedRef.current;
+    pollingPausedRef.current = true;
+    setIsPollingPaused(true);
     try {
       setIsClaiming(true);
-      
+      setClaimStartedAt(Date.now());
+      setClaimElapsedSec(0);
       const { claimed } = await scanAndClaim();
-      
       if (claimed > 0) {
         await fetch("/api/events/claim-all", { method: "POST" });
+
+        if (USDC_MINT) {
+          toast.info("Converting balance to withdrawable format...");
+          const result = await convertToShared([USDC_MINT as Address]);
+          if (result.converted.size > 0) {
+            toast.success(`Balance converted successfully`);
+          }
+        }
+
         toast.success(`Successfully claimed ${claimed} payments`);
         await fetchBalance();
         await fetchDashboard();
@@ -68,14 +125,32 @@ export function CockpitView() {
       toast.error(err.message || "Failed to claim payments");
     } finally {
       setIsClaiming(false);
+      setClaimStartedAt(null);
+      setClaimElapsedSec(0);
+      if (!wasPaused) {
+        pollingPausedRef.current = false;
+        setIsPollingPaused(false);
+      }
     }
   };
+
+  // Tick elapsed seconds while a claim is in progress
+  useEffect(() => {
+    if (!isClaiming || claimStartedAt === null) return;
+    const tick = setInterval(() => {
+      setClaimElapsedSec(Math.floor((Date.now() - claimStartedAt) / 1000));
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [isClaiming, claimStartedAt]);
 
   const handleWithdraw = async () => {
     if (!encryptedBalance || encryptedBalance === 0n) {
       toast.info("No balance to withdraw.");
       return;
     }
+    const wasPaused = pollingPausedRef.current;
+    pollingPausedRef.current = true;
+    setIsPollingPaused(true);
     try {
       setIsWithdrawing(true);
       toast.info("Withdrawing to wallet... this may take 5–15 seconds.");
@@ -86,6 +161,10 @@ export function CockpitView() {
       toast.error(err.message || "Withdrawal failed.");
     } finally {
       setIsWithdrawing(false);
+      if (!wasPaused) {
+        pollingPausedRef.current = false;
+        setIsPollingPaused(false);
+      }
     }
   };
 
@@ -147,6 +226,22 @@ export function CockpitView() {
             </span>
           </div>
         </div>
+        <button
+          onClick={togglePolling}
+          className={`flex items-center gap-[6px] text-[13px] font-medium px-[12px] py-[8px] rounded-full border transition-colors ${
+            isPollingPaused
+              ? "border-iron/10 text-iron hover:border-iron/30"
+              : "border-iron/10 text-ink hover:border-iron/30"
+          }`}
+          title={isPollingPaused ? "Resume auto-refresh" : "Pause auto-refresh"}
+        >
+          {isPollingPaused ? (
+            <PlayCircle weight="fill" className="w-[16px] h-[16px]" />
+          ) : (
+            <PauseCircle weight="fill" className="w-[16px] h-[16px]" />
+          )}
+          {isPollingPaused ? "Paused" : "Auto"}
+        </button>
       </div>
 
       {/* CORE METRICS */}
@@ -156,13 +251,30 @@ export function CockpitView() {
         <div className="col-span-1 lg:col-span-2 bg-canvas border border-iron/10 rounded-[30px] p-[40px] flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow">
           <div className="flex items-center justify-between mb-[40px]">
             <span className="text-[16px] text-iron font-medium">Encrypted Balance</span>
-            <ShieldCheck weight="fill" className="w-[24px] h-[24px] text-iron" />
+            <button
+              onClick={refreshDashboard}
+              disabled={isRefreshingBalance}
+              className="p-[8px] rounded-full hover:bg-iron/10 transition-colors disabled:opacity-40 focus-visible:outline-none"
+              title="Refresh balance"
+            >
+              <ArrowsClockwise
+                weight="bold"
+                className={`w-[18px] h-[18px] text-iron ${isRefreshingBalance ? "animate-spin" : ""}`}
+              />
+            </button>
           </div>
           <div>
             <div className="font-sans text-display font-light text-ink tracking-[-2px] mb-[8px] leading-[1.0]">
               ${encryptedBalance !== null ? formatMicroUsdc(Number(encryptedBalance)) : "---"}
             </div>
-            <div className="text-[15px] text-silver-thread mb-[24px]">USDC secured via Umbra</div>
+            <div className="text-[15px] text-silver-thread mb-[24px]">
+              USDC secured via Umbra
+              {lastRefreshed && (
+                <span className="block text-[12px] text-silver-thread/60 mt-[4px]">
+                  Updated {lastRefreshed.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
             <button
               onClick={handleWithdraw}
               disabled={isWithdrawing || !encryptedBalance || encryptedBalance === 0n}
@@ -219,7 +331,7 @@ export function CockpitView() {
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
                     <ArrowsClockwise weight="bold" className="w-[18px] h-[18px]" />
                   </motion.div>
-                  Processing...
+                  Processing... {claimElapsedSec > 0 && `(${claimElapsedSec}s)`}
                 </>
               ) : (
                 "Claim to Balance"

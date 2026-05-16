@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useEncryptedBalance } from "@/lib/umbra/useEncryptedBalance";
 import { useClaim } from "@/lib/umbra/useClaim";
 import { useViewingKey } from "@/lib/umbra/useViewingKey";
+import { useConvertToShared } from "@/lib/umbra/useConvertToShared";
 import { useWithdraw } from "@/lib/umbra/useWithdraw";
+import type { Address } from "@solana/kit";
 import { 
   Wallet, 
   TrendingUp, 
@@ -19,7 +21,9 @@ import {
   Award, 
   Ghost,
   Download,
-  RotateCw
+  RotateCw,
+  PauseCircle,
+  PlayCircle,
 } from "lucide-react";
 import { formatMicroUsdc } from "@/lib/constants";
 import { EventFeed } from "@/components/creator/EventFeed";
@@ -41,12 +45,21 @@ export function DashboardContent() {
   
   const { getBalance } = useEncryptedBalance();
   const { scanAndClaim } = useClaim();
+  const { convertToShared } = useConvertToShared();
   const { deriveMonthly, deriveYearly } = useViewingKey();
   const { withdraw } = useWithdraw();
+  const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT;
 
   const [encryptedBalance, setEncryptedBalance] = useState<bigint | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [claimStartedAt, setClaimStartedAt] = useState<number | null>(null);
+  const [claimElapsedSec, setClaimElapsedSec] = useState(0);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [isPollingPaused, setIsPollingPaused] = useState(false);
+  const pollingPausedRef = useRef(false);
+  const pollingPendingRef = useRef(false);
 
   const fetchDashboard = async () => {
     try {
@@ -67,17 +80,65 @@ export function DashboardContent() {
     if (bal !== null) setEncryptedBalance(bal);
   };
 
+  const refreshDashboard = async () => {
+    setIsRefreshingBalance(true);
+    await Promise.allSettled([fetchDashboard(), fetchBalance()]);
+    setLastRefreshed(new Date());
+    setIsRefreshingBalance(false);
+  };
+
   useEffect(() => {
     fetchDashboard();
     fetchBalance();
   }, []);
 
+  const fetchDashboardRef = useRef(fetchDashboard);
+  const fetchBalanceRef = useRef(fetchBalance);
+  useEffect(() => {
+    fetchDashboardRef.current = fetchDashboard;
+    fetchBalanceRef.current = fetchBalance;
+  });
+
+  const togglePolling = () => {
+    const next = !pollingPausedRef.current;
+    pollingPausedRef.current = next;
+    setIsPollingPaused(next);
+  };
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (pollingPausedRef.current || pollingPendingRef.current) return;
+      pollingPendingRef.current = true;
+      await Promise.allSettled([
+        fetchDashboardRef.current(),
+        fetchBalanceRef.current(),
+      ]);
+      pollingPendingRef.current = false;
+      setLastRefreshed(new Date());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleClaim = async () => {
+    const wasPaused = pollingPausedRef.current;
+    pollingPausedRef.current = true;
+    setIsPollingPaused(true);
     try {
       setIsClaiming(true);
+      setClaimStartedAt(Date.now());
+      setClaimElapsedSec(0);
       const { claimed } = await scanAndClaim();
       if (claimed > 0) {
         await fetch("/api/events/claim-all", { method: "POST" });
+
+        if (USDC_MINT) {
+          toast.info("Converting balance to withdrawable format...");
+          const result = await convertToShared([USDC_MINT as Address]);
+          if (result.converted.size > 0) {
+            toast.success(`Balance converted successfully`);
+          }
+        }
+
         toast.success(`Successfully claimed ${claimed} payments`);
         await fetchBalance();
         await fetchDashboard();
@@ -88,14 +149,32 @@ export function DashboardContent() {
       toast.error(err.message || "Failed to claim payments");
     } finally {
       setIsClaiming(false);
+      setClaimStartedAt(null);
+      setClaimElapsedSec(0);
+      if (!wasPaused) {
+        pollingPausedRef.current = false;
+        setIsPollingPaused(false);
+      }
     }
   };
+
+  // Tick elapsed seconds while a claim is in progress
+  useEffect(() => {
+    if (!isClaiming || claimStartedAt === null) return;
+    const tick = setInterval(() => {
+      setClaimElapsedSec(Math.floor((Date.now() - claimStartedAt) / 1000));
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [isClaiming, claimStartedAt]);
 
   const handleWithdraw = async () => {
     if (!encryptedBalance || encryptedBalance === 0n) {
       toast.info("No balance to withdraw.");
       return;
     }
+    const wasPaused = pollingPausedRef.current;
+    pollingPausedRef.current = true;
+    setIsPollingPaused(true);
     try {
       setIsWithdrawing(true);
       toast.info("Withdrawing to wallet... this may take 5–15 seconds.");
@@ -106,6 +185,10 @@ export function DashboardContent() {
       toast.error(err.message || "Withdrawal failed.");
     } finally {
       setIsWithdrawing(false);
+      if (!wasPaused) {
+        pollingPausedRef.current = false;
+        setIsPollingPaused(false);
+      }
     }
   };
 
@@ -166,6 +249,19 @@ export function DashboardContent() {
         </motion.div>
         
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <button
+            onClick={togglePolling}
+            className={`pill-button-secondary px-3 py-3 text-base w-full sm:w-auto flex items-center justify-center gap-2 ${
+              isPollingPaused ? "opacity-60" : ""
+            }`}
+            title={isPollingPaused ? "Resume auto-refresh" : "Pause auto-refresh"}
+          >
+            {isPollingPaused ? (
+              <PlayCircle className="w-4 h-4" />
+            ) : (
+              <PauseCircle className="w-4 h-4" />
+            )}
+          </button>
           <button 
             onClick={() => navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/c/${data.slug}`).then(() => toast.success("Link copied!"))}
             className="pill-button-secondary px-6 py-3 text-base w-full sm:w-auto flex items-center justify-center gap-2"
@@ -189,7 +285,8 @@ export function DashboardContent() {
             label: "Current Balance", 
             value: encryptedBalance !== null ? `$${formatMicroUsdc(Number(encryptedBalance))}` : "---", 
             icon: <Wallet className="w-6 h-6" />, 
-            color: "bg-blue-50 text-veil-primary" 
+            color: "bg-blue-50 text-veil-primary",
+            onRefresh: refreshDashboard,
           },
           { 
             label: "Last 30 Days", 
@@ -216,8 +313,20 @@ export function DashboardContent() {
             <div className={`w-14 h-14 rounded-full ${metric.color} flex items-center justify-center`}>
               {metric.icon}
             </div>
-            <div>
-              <p className="text-veil-muted font-bold text-sm uppercase tracking-wide">{metric.label}</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <p className="text-veil-muted font-bold text-sm uppercase tracking-wide">{metric.label}</p>
+                {"onRefresh" in metric && (
+                  <button
+                    onClick={metric.onRefresh}
+                    disabled={isRefreshingBalance}
+                    className="p-1.5 rounded-full hover:bg-black/5 transition-colors disabled:opacity-40"
+                    title="Refresh balance"
+                  >
+                    <RotateCw className={`w-3.5 h-3.5 text-veil-muted ${isRefreshingBalance ? "animate-spin" : ""}`} />
+                  </button>
+                )}
+              </div>
               <h3 className="font-heading text-3xl font-black text-veil-text">{metric.value}</h3>
             </div>
           </motion.div>
@@ -308,10 +417,30 @@ export function DashboardContent() {
           >
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-veil-primary/10 rounded-full blur-2xl pointer-events-none"></div>
             
-            <h2 className="font-heading text-xl font-black text-veil-text mb-2">
-              Your Wallet
-            </h2>
-            <p className="text-sm font-bold text-veil-muted mb-6">Available to withdraw</p>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-heading text-xl font-black text-veil-text">
+                Your Wallet
+              </h2>
+              <button
+                onClick={refreshDashboard}
+                disabled={isRefreshingBalance}
+                className="p-2 rounded-full hover:bg-white/60 transition-colors disabled:opacity-40"
+                title="Refresh balance"
+              >
+                <RotateCw className={`w-4 h-4 text-veil-muted ${isRefreshingBalance ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+            <p className="text-sm font-bold text-veil-muted mb-4">Available to withdraw</p>
+            {lastRefreshed && !isPollingPaused && (
+              <p className="text-[11px] text-veil-muted/50 -mt-3">
+                Updated {lastRefreshed.toLocaleTimeString()}
+              </p>
+            )}
+            {isPollingPaused && (
+              <p className="text-[11px] text-amber-500/70 -mt-3">
+                Auto-refresh paused
+              </p>
+            )}
             
             <div className="mb-8">
               <h3 className="font-heading text-5xl font-black text-veil-text tracking-tight flex items-start gap-1">
@@ -331,7 +460,7 @@ export function DashboardContent() {
                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
                       <RotateCw className="w-4 h-4" />
                     </motion.div>
-                    Processing...
+                    Processing... {claimElapsedSec > 0 && `(${claimElapsedSec}s)`}
                   </>
                 ) : (
                   <>

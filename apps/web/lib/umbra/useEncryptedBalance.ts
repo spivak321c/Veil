@@ -31,7 +31,24 @@ export function useEncryptedBalance() {
       const balances = await queryBalances([USDC_MINT as Address]);
       const result = balances.get(USDC_MINT as Address);
 
-      if (result?.state === "shared") return result.balance;
+      console.log("[useEncryptedBalance] balance query result:", result);
+
+      if (!result) return null;
+
+      if (result.state === "shared") return result.balance;
+
+      // "mxe" means the token account is in MXE (network encryption) mode.
+      // This happens when the balance was claimed but the account has not yet
+      // been converted to shared mode. The balance exists on-chain but cannot
+      // be decrypted client-side. Return 0n so the UI shows $0.00 with the
+      // correct state rather than silently hiding the balance.
+      if (result.state === "mxe") {
+        console.warn("[useEncryptedBalance] Balance is in MXE mode — not yet decryptable client-side. State:", result.state);
+        return 0n;
+      }
+
+      // "uninitialized" or "non_existent" — no balance to show.
+      console.warn("[useEncryptedBalance] Unexpected balance state:", result.state);
       return null;
     } catch (err) {
       console.error("Failed to fetch encrypted balance", err);
