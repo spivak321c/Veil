@@ -15,7 +15,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { creatorSlug, amountUsdc, utxoSignature } = parsed.data;
+    const { creatorSlug, amountUsdc, utxoSignature, message, isMessagePublic } = parsed.data;
 
     // Find creator by slug
     const creator = await prisma.creator.findUnique({
@@ -45,6 +45,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       data: {
         creatorId: creator.id,
         amountUsdc,
+        message: message ?? null,
+        isMessagePublic: isMessagePublic ?? true,
         utxoSignature,
       },
     });

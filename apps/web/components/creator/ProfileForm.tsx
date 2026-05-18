@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
 const profileSchema = z.object({
-  slug: z.string().min(3).max(30).regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens allowed"),
   displayName: z.string().min(1).max(50),
   bio: z.string().max(500),
   category: z.enum(["MUSIC", "ART", "WRITING", "DEVELOPMENT", "GAMING", "EDUCATION", "OTHER"]),
@@ -16,7 +15,7 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-export function ProfileForm({ onSubmit, defaultValues }: { onSubmit: (data: ProfileFormValues) => Promise<void>, defaultValues?: Partial<ProfileFormValues> }) {
+export function ProfileForm({ onSubmit, defaultValues, creatorSlug }: { onSubmit: (data: ProfileFormValues) => Promise<void>, defaultValues?: Partial<ProfileFormValues>, creatorSlug?: string }) {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: defaultValues || {
@@ -42,10 +41,9 @@ export function ProfileForm({ onSubmit, defaultValues }: { onSubmit: (data: Prof
             veil.app/c/
           </span>
           <Input 
-            {...register("slug")} 
-            placeholder="alice-art" 
-            className="flex-1"
-            error={errors.slug?.message}
+            disabled
+            value={creatorSlug ?? ""}
+            className="flex-1 opacity-60 cursor-not-allowed"
           />
         </div>
       </div>

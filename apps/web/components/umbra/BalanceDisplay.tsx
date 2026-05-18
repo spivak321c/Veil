@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useEncryptedBalance } from "@/lib/umbra/useEncryptedBalance";
+import { useEncryptedBalance, type AccountState } from "@/lib/umbra/useEncryptedBalance";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { EyeOff, RefreshCw } from "lucide-react";
@@ -9,13 +9,15 @@ import { EyeOff, RefreshCw } from "lucide-react";
 export function BalanceDisplay() {
   const { getBalance } = useEncryptedBalance();
   const [balance, setBalance] = useState<bigint | null>(null);
+  const [accountState, setAccountState] = useState<AccountState>("none");
   const [loading, setLoading] = useState(true);
 
   const fetchBalance = async () => {
     setLoading(true);
     try {
-      const bal = await getBalance();
-      setBalance(bal);
+      const result = await getBalance();
+      setBalance(result.balance);
+      setAccountState(result.state);
     } catch (err) {
       console.error(err);
     } finally {
@@ -48,7 +50,14 @@ export function BalanceDisplay() {
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
-          {balance !== null ? (
+          {accountState === "mxe" ? (
+            <div className="flex items-baseline gap-[8px]">
+              <div className="font-mono text-display font-light text-ink tracking-[-2px] leading-[1.0]">
+                🔒 MXE
+              </div>
+              <span className="text-iron font-mono text-[16px] mb-[8px]">USDC</span>
+            </div>
+          ) : balance !== null ? (
             <div className="flex items-baseline gap-[8px]">
               <div className="font-mono text-display font-light text-ink tracking-[-2px] leading-[1.0]">
                 <span className="text-silver-thread mr-[8px] text-[40px]">$</span>
@@ -62,7 +71,9 @@ export function BalanceDisplay() {
             </div>
           )}
           <p className="text-[14px] text-iron mt-[16px] max-w-md">
-            This balance is secured by Arcium MPC. It represents the sum of all your claimed stealth payments.
+            {accountState === "mxe"
+              ? "Balance is in MXE (locked) mode. Use withdraw to claim via Arcium MPC."
+              : "This balance is secured by Arcium MPC. It represents the sum of all your claimed stealth payments."}
           </p>
         </div>
 

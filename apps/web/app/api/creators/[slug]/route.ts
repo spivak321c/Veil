@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { updateCreatorSchema } from "@/lib/validation";
 import { getAuthFromRequest } from "@/lib/middleware";
-import type { CreatorPublic, TierPublic } from "@veil/db";
+import type { CreatorPublic, TierPublic, SupportEventPublic } from "@veil/db";
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: RouteContext
 ): Promise<NextResponse> {
   try {
     const { slug } = await context.params;
+    const { searchParams } = new URL(req.url);
+    const include = searchParams.get("include");
 
     const creator = await prisma.creator.findUnique({
       where: { slug },
@@ -28,6 +30,29 @@ export async function GET(
     const totalSupportEvents = await prisma.supportEvent.count({
       where: { creatorId: creator.id },
     });
+
+    let recentPublicEvents: SupportEventPublic[] | undefined;
+
+    if (include === "publicEvents") {
+      const publicEvents = await prisma.supportEvent.findMany({
+        where: { creatorId: creator.id, isMessagePublic: true, message: { not: null } },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+      recentPublicEvents = publicEvents.map((e: {
+        id: string; amountUsdc: number; message: string | null;
+        isMessagePublic: boolean; utxoSignature: string | null;
+        claimedAt: Date | null; createdAt: Date;
+      }) => ({
+        id: e.id,
+        amountUsdc: e.amountUsdc,
+        message: e.message,
+        isMessagePublic: e.isMessagePublic,
+        utxoSignature: e.utxoSignature,
+        claimedAt: e.claimedAt?.toISOString() ?? null,
+        createdAt: e.createdAt.toISOString(),
+      }));
+    }
 
     const result: CreatorPublic = {
       id: creator.id,
@@ -46,6 +71,7 @@ export async function GET(
         sortOrder: t.sortOrder,
       })),
       stats: { totalSupportEvents },
+      recentPublicEvents,
     };
 
     return NextResponse.json({ data: result }, { status: 200 });

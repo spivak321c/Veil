@@ -64,6 +64,8 @@ export const createEventSchema = z.object({
   creatorSlug: z.string().min(1),
   amountUsdc: z.number().int().min(1),
   utxoSignature: z.string().min(1),
+  message: z.string().max(500).optional().nullable(),
+  isMessagePublic: z.boolean().optional(),
 });
 
 export const claimEventSchema = z.object({

@@ -147,31 +147,63 @@ const SEED_CREATORS = [
   },
 ];
 
+const SAMPLE_MESSAGES = [
+  "Absolutely love your work! Keep creating amazing things.",
+  "Thanks for all the free content. Happy to support!",
+  "You inspired me to start my own journey in this space.",
+  "Here's to more great art! Your style is incredible.",
+  "Been following your work for months. Well deserved!",
+  "This community wouldn't be the same without you.",
+  "Small contribution but big appreciation for what you do.",
+  "Your tutorials are world-class. Thank you!",
+];
+
 async function main(): Promise<void> {
   console.log("Seeding creators...");
 
   for (const data of SEED_CREATORS) {
     const { tiers, ...creatorData } = data;
 
-    const existing = await prisma.creator.findUnique({
+    let creator = await prisma.creator.findUnique({
       where: { slug: creatorData.slug },
     });
 
-    if (existing) {
-      console.log(`  Skipping "${creatorData.slug}" (already exists)`);
-      continue;
+    if (creator) {
+      console.log(`  Found existing "${creatorData.slug}", reseeding events...`);
+      // Delete old events so we get fresh sample data
+      await prisma.supportEvent.deleteMany({ where: { creatorId: creator.id } });
+    } else {
+      creator = await prisma.creator.create({
+        data: {
+          ...creatorData,
+          tiers: {
+            create: tiers,
+          },
+        },
+      });
+      console.log(`  Created "${creatorData.slug}"`);
     }
 
-    await prisma.creator.create({
-      data: {
-        ...creatorData,
-        tiers: {
-          create: tiers,
-        },
-      },
-    });
+    // Seed some sample support events with messages
+    const numEvents = Math.floor(Math.random() * 4) + 2;
+    for (let i = 0; i < numEvents; i++) {
+      const daysAgo = Math.floor(Math.random() * 60);
+      const message = SAMPLE_MESSAGES[Math.floor(Math.random() * SAMPLE_MESSAGES.length)];
+      const amount = [1_000_000, 2_000_000, 5_000_000, 10_000_000, 15_000_000, 25_000_000][Math.floor(Math.random() * 6)];
 
-    console.log(`  Created "${creatorData.slug}"`);
+      await prisma.supportEvent.create({
+        data: {
+          creatorId: creator.id,
+          amountUsdc: amount,
+          message,
+          isMessagePublic: Math.random() > 0.3,
+          utxoSignature: `seed_${creator.slug}_${i}_${Date.now()}`,
+          claimedAt: Math.random() > 0.4 ? new Date(Date.now() - daysAgo * 86400000) : null,
+          createdAt: new Date(Date.now() - daysAgo * 86400000),
+        },
+      });
+    }
+    console.log(`  Seeded ${numEvents} sample events for "${creatorData.slug}"`);
   }
 
   console.log("Done.");

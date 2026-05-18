@@ -2,25 +2,29 @@ import { getEncryptedBalanceQuerierFunction } from "@umbra-privacy/sdk";
 import { useUmbraStore } from "./store";
 import type { Address } from "@solana/kit";
 
+export type AccountState = "shared" | "mxe" | "none";
+
 /**
  * React hook for querying the encrypted balance.
  * 
  * IMPORTANT: Must be used in a Client Component ("use client").
  * 
- * @returns `getBalance()` → Queries the encrypted balance for USDC. Returns null if unavailable.
+ * @returns `getBalance()` → Queries the encrypted balance for USDC. Returns { balance, state }.
+ *   - `balance`: null if account doesn't exist, 0n if MXE mode, >0n if shared
+ *   - `state`: "shared" | "mxe" | "none"
  */
 export function useEncryptedBalance() {
   const client = useUmbraStore((s) => s.client);
   const isInitializing = useUmbraStore((s) => s.isInitializing);
 
-  const getBalance = async (): Promise<bigint | null> => {
+  const getBalance = async (): Promise<{ balance: bigint | null; state: AccountState }> => {
     if (isInitializing) {
       console.warn("Umbra client is still initializing.");
-      return null;
+      return { balance: null, state: "none" };
     }
     if (!client) {
       console.warn("Client not initialized. Please connect your wallet.");
-      return null;
+      return { balance: null, state: "none" };
     }
 
     const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT;
@@ -33,26 +37,20 @@ export function useEncryptedBalance() {
 
       console.log("[useEncryptedBalance] balance query result:", result);
 
-      if (!result) return null;
+      if (!result) return { balance: null, state: "none" };
 
-      if (result.state === "shared") return result.balance;
+      if (result.state === "shared") return { balance: result.balance, state: "shared" };
 
-      // "mxe" means the token account is in MXE (network encryption) mode.
-      // This happens when the balance was claimed but the account has not yet
-      // been converted to shared mode. The balance exists on-chain but cannot
-      // be decrypted client-side. Return 0n so the UI shows $0.00 with the
-      // correct state rather than silently hiding the balance.
       if (result.state === "mxe") {
-        console.warn("[useEncryptedBalance] Balance is in MXE mode — not yet decryptable client-side. State:", result.state);
-        return 0n;
+        console.warn("[useEncryptedBalance] Balance is in MXE mode — not yet decryptable client-side.");
+        return { balance: null, state: "mxe" };
       }
 
-      // "uninitialized" or "non_existent" — no balance to show.
       console.warn("[useEncryptedBalance] Unexpected balance state:", result.state);
-      return null;
+      return { balance: null, state: "none" };
     } catch (err) {
       console.error("Failed to fetch encrypted balance", err);
-      return null;
+      return { balance: null, state: "none" };
     }
   };
 

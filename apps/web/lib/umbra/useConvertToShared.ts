@@ -23,10 +23,18 @@ export function useConvertToShared() {
     const convertFn = getNetworkEncryptionToSharedEncryptionConverterFunction({ client });
     const result = await convertFn(mints);
 
-    for (const [, skippedReason] of result.skipped) {
-      if (skippedReason !== "already_shared") {
-        console.warn("[useConvertToShared] Skipped conversion for a mint:", skippedReason);
+    const errors: string[] = [];
+    for (const [mint, skippedReason] of result.skipped) {
+      if (skippedReason === "already_shared") {
+        continue;
       }
+      const msg = `Skipped conversion for ${mint}: ${skippedReason}`;
+      console.warn("[useConvertToShared]", msg);
+      errors.push(msg);
+    }
+
+    if (result.converted.size === 0 && errors.length > 0) {
+      throw new Error(`Balance conversion to shared mode failed: ${errors.join("; ")}. Withdrawal may still work via Arcium MPC.`);
     }
 
     return result;

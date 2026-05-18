@@ -39,12 +39,14 @@ model Tier {
 }
 
 model SupportEvent {
-  id            String    @id @default(cuid())
-  creatorId     String
-  amountUsdc    Int
-  utxoSignature String?
-  claimedAt     DateTime?
-  createdAt     DateTime  @default(now())
+  id              String    @id @default(cuid())
+  creatorId       String
+  amountUsdc      Int
+  message         String?
+  isMessagePublic Boolean   @default(true)
+  utxoSignature   String?
+  claimedAt       DateTime?
+  createdAt       DateTime  @default(now())
 
   @@index([creatorId])
 }

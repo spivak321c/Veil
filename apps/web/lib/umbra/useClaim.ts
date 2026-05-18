@@ -15,14 +15,14 @@ import { useUmbraStore } from "./store";
 type ZkAssetData = { zkey: Uint8Array; wasm: Uint8Array };
 const zkAssetCache = new Map<string, ZkAssetData>();
 
-const zkAssetLoader = async (context: { type: string; variant: string }) => {
+const zkAssetLoader = async (context: { type: string; variant?: string }) => {
   const key = `${context.type}:${context.variant}`;
   const cached = zkAssetCache.get(key);
   if (cached) return { exists: true as const, data: cached };
   return { exists: false as const };
 };
 
-const zkAssetStorer = async (data: ZkAssetData, context: { type: string; variant: string }) => {
+const zkAssetStorer = async (data: ZkAssetData, context: { type: string; variant?: string }) => {
   const key = `${context.type}:${context.variant}`;
   zkAssetCache.set(key, data);
   return { success: true as const };

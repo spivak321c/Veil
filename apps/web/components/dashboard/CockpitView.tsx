@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEncryptedBalance } from "@/lib/umbra/useEncryptedBalance";
+import { useEncryptedBalance, type AccountState } from "@/lib/umbra/useEncryptedBalance";
 import { useClaim } from "@/lib/umbra/useClaim";
 import { useViewingKey } from "@/lib/umbra/useViewingKey";
 import { ShieldCheck, ArrowsClockwise, Key, TrendUp, DownloadSimple, ArrowLineDown, PauseCircle, PlayCircle } from "@phosphor-icons/react";
@@ -27,6 +27,7 @@ export function CockpitView() {
   const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT;
 
   const [encryptedBalance, setEncryptedBalance] = useState<bigint | null>(null);
+  const [accountState, setAccountState] = useState<AccountState>("none");
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimStartedAt, setClaimStartedAt] = useState<number | null>(null);
   const [claimElapsedSec, setClaimElapsedSec] = useState(0);
@@ -52,8 +53,9 @@ export function CockpitView() {
   };
 
   const fetchBalance = async () => {
-    const bal = await getBalance();
-    if (bal !== null) setEncryptedBalance(bal);
+    const result = await getBalance();
+    setEncryptedBalance(result.balance);
+    setAccountState(result.state);
   };
 
   const refreshDashboard = async () => {
@@ -109,9 +111,12 @@ export function CockpitView() {
 
         if (USDC_MINT) {
           toast.info("Converting balance to withdrawable format...");
-          const result = await convertToShared([USDC_MINT as Address]);
-          if (result.converted.size > 0) {
+          try {
+            await convertToShared([USDC_MINT as Address]);
             toast.success(`Balance converted successfully`);
+          } catch (convErr: any) {
+            console.warn("[handleClaim] convertToShared failed:", convErr);
+            toast.warning("Balance may be in locked mode — withdrawal via Arcium still works");
           }
         }
 
@@ -144,17 +149,18 @@ export function CockpitView() {
   }, [isClaiming, claimStartedAt]);
 
   const handleWithdraw = async () => {
-    if (!encryptedBalance || encryptedBalance === 0n) {
+    if (!encryptedBalance && accountState !== "mxe") {
       toast.info("No balance to withdraw.");
       return;
     }
+    const amountToWithdraw = encryptedBalance ?? 0n;
     const wasPaused = pollingPausedRef.current;
     pollingPausedRef.current = true;
     setIsPollingPaused(true);
     try {
       setIsWithdrawing(true);
       toast.info("Withdrawing to wallet... this may take 5–15 seconds.");
-      await withdraw(encryptedBalance);
+      await withdraw(amountToWithdraw);
       toast.success("Funds withdrawn to your Solflare wallet!");
       await fetchBalance();
     } catch (err: any) {
@@ -265,10 +271,10 @@ export function CockpitView() {
           </div>
           <div>
             <div className="font-sans text-display font-light text-ink tracking-[-2px] mb-[8px] leading-[1.0]">
-              ${encryptedBalance !== null ? formatMicroUsdc(Number(encryptedBalance)) : "---"}
+              {accountState === "mxe" ? "🔒 MXE" : encryptedBalance !== null ? `$${formatMicroUsdc(Number(encryptedBalance))}` : "---"}
             </div>
             <div className="text-[15px] text-silver-thread mb-[24px]">
-              USDC secured via Umbra
+              {accountState === "mxe" ? "Balance locked — use withdraw to claim via Arcium" : "USDC secured via Umbra"}
               {lastRefreshed && (
                 <span className="block text-[12px] text-silver-thread/60 mt-[4px]">
                   Updated {lastRefreshed.toLocaleTimeString()}
@@ -277,7 +283,7 @@ export function CockpitView() {
             </div>
             <button
               onClick={handleWithdraw}
-              disabled={isWithdrawing || !encryptedBalance || encryptedBalance === 0n}
+              disabled={isWithdrawing || (encryptedBalance === null && accountState !== "mxe")}
               className="flex items-center gap-[8px] text-[14px] font-medium text-iron hover:text-ink disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none"
             >
               {isWithdrawing ? (
@@ -290,7 +296,7 @@ export function CockpitView() {
               ) : (
                 <>
                   <ArrowLineDown weight="bold" className="w-[16px] h-[16px]" />
-                  Withdraw to Wallet
+                  {accountState === "mxe" ? "Withdraw (MXE)" : "Withdraw to Wallet"}
                 </>
               )}
             </button>

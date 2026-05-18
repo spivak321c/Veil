@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useWalletConnection } from "@solana/react-hooks";
 import { ConnectButton } from "@/components/wallet/ConnectButton";
 import { toast } from "sonner";
@@ -12,9 +11,10 @@ import Link from "next/link";
 import VeilHeader from "@/components/VeilHeader";
 import VeilFooter from "@/components/VeilFooter";
 
+const springTransition = { type: "spring" as const, stiffness: 100, damping: 20 };
+
 export default function LoginPage() {
   const { connected, wallet } = useWalletConnection();
-  const router = useRouter();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   async function handleSignIn() {
@@ -80,7 +80,7 @@ export default function LoginPage() {
       }
 
       toast.success("Signed in successfully!");
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (error: any) {
       toast.error(error.message || "Authentication failed.");
       console.error("Sign in error:", error);
@@ -90,37 +90,46 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-[100dvh] flex flex-col bg-veil-bg selection:bg-veil-primary selection:text-white relative overflow-hidden">
       <VeilHeader />
-      <main className="flex-1 flex items-center justify-center px-4 py-24">
+      
+      {/* Background Ambience */}
+      <div className="absolute top-1/4 right-1/4 w-[40vw] h-[40vw] bg-veil-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+      
+      <main className="flex-1 flex items-center justify-center px-6 py-32 z-0">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
-          className="w-full max-w-[440px] bg-veil-surface rounded-[32px] p-10 shadow-sm border border-black/5 relative overflow-hidden"
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={springTransition}
+          className="w-full max-w-[440px] bg-white rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 relative overflow-hidden"
         >
-          <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-veil-text text-veil-surface rounded-full flex items-center justify-center mx-auto mb-6">
+          {/* Inner ambient glow */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-veil-primary/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="text-center mb-10 relative z-10">
+            <div className="w-16 h-16 bg-veil-bg text-veil-text rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-black/5">
               <Lock className="w-7 h-7" />
             </div>
-            <h1 className="text-[28px] font-heading font-black tracking-tight text-veil-text mb-3">
-              Sign in
+            <h1 className="text-3xl font-heading font-black tracking-tight text-veil-text mb-3">
+              Creator Login
             </h1>
-            <p className="text-veil-muted text-[15px] leading-relaxed">
-              Connect your wallet and sign a message to access your dashboard.
+            <p className="text-veil-muted text-sm font-medium leading-relaxed max-w-[30ch] mx-auto">
+              Connect your wallet and sign a message to access your dashboard securely.
             </p>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5 relative z-10">
             {!connected ? (
-              <div className="flex justify-center">
-                <ConnectButton />
+              <div className="flex justify-center w-full">
+                <div className="w-full [&>div]:w-full [&_button]:w-full [&_button]:justify-center">
+                  <ConnectButton />
+                </div>
               </div>
             ) : (
               <button
                 onClick={handleSignIn}
                 disabled={isAuthenticating}
-                className="pill-button-primary w-full flex items-center justify-center gap-2.5 h-[54px] text-[16px] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:hover:shadow-none group"
+                className="w-full bg-veil-text text-white rounded-full font-bold text-base flex items-center justify-center gap-2 h-14 hover:bg-black transition-all shadow-lg active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed group"
               >
                 {isAuthenticating ? (
                   <>
@@ -136,15 +145,17 @@ export default function LoginPage() {
               </button>
             )}
 
-            <p className="text-center text-[14px] text-veil-muted mt-4">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/onboard"
-                className="text-veil-primary font-bold hover:underline"
-              >
-                Register here
-              </Link>
-            </p>
+            <div className="mt-4 pt-6 border-t border-black/5 text-center">
+              <p className="text-sm font-medium text-veil-muted">
+                Don&apos;t have an account?{" "}
+                <Link
+                  href="/onboard"
+                  className="text-veil-text font-bold hover:text-veil-primary transition-colors hover:underline underline-offset-4"
+                >
+                  Register here
+                </Link>
+              </p>
+            </div>
           </div>
         </motion.div>
       </main>

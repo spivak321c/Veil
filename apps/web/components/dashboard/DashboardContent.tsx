@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { useEncryptedBalance } from "@/lib/umbra/useEncryptedBalance";
+import { useEncryptedBalance, type AccountState } from "@/lib/umbra/useEncryptedBalance";
 import { useClaim } from "@/lib/umbra/useClaim";
 import { useViewingKey } from "@/lib/umbra/useViewingKey";
 import { useConvertToShared } from "@/lib/umbra/useConvertToShared";
@@ -24,18 +24,30 @@ import {
   RotateCw,
   PauseCircle,
   PlayCircle,
+  Sparkles,
+  ChevronDown
 } from "lucide-react";
 import { formatMicroUsdc } from "@/lib/constants";
 import { EventFeed } from "@/components/creator/EventFeed";
 import type { CreatorFull } from "@veil/db";
 import { toast } from "sonner";
 
+const springTransition = { type: "spring" as const, stiffness: 100, damping: 20 };
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
 const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 24 },
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { duration: 0.8, ease: [0.2, 0.8, 0.2, 1] } 
+    transition: springTransition 
   },
 } as const;
 
@@ -51,6 +63,7 @@ export function DashboardContent() {
   const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT;
 
   const [encryptedBalance, setEncryptedBalance] = useState<bigint | null>(null);
+  const [accountState, setAccountState] = useState<AccountState>("none");
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimStartedAt, setClaimStartedAt] = useState<number | null>(null);
   const [claimElapsedSec, setClaimElapsedSec] = useState(0);
@@ -76,8 +89,9 @@ export function DashboardContent() {
   };
 
   const fetchBalance = async () => {
-    const bal = await getBalance();
-    if (bal !== null) setEncryptedBalance(bal);
+    const result = await getBalance();
+    setEncryptedBalance(result.balance);
+    setAccountState(result.state);
   };
 
   const refreshDashboard = async () => {
@@ -133,9 +147,12 @@ export function DashboardContent() {
 
         if (USDC_MINT) {
           toast.info("Converting balance to withdrawable format...");
-          const result = await convertToShared([USDC_MINT as Address]);
-          if (result.converted.size > 0) {
+          try {
+            await convertToShared([USDC_MINT as Address]);
             toast.success(`Balance converted successfully`);
+          } catch (convErr: any) {
+            console.warn("[handleClaim] convertToShared failed:", convErr);
+            toast.warning("Balance may be in locked mode — withdrawal via Arcium still works");
           }
         }
 
@@ -158,7 +175,6 @@ export function DashboardContent() {
     }
   };
 
-  // Tick elapsed seconds while a claim is in progress
   useEffect(() => {
     if (!isClaiming || claimStartedAt === null) return;
     const tick = setInterval(() => {
@@ -168,17 +184,18 @@ export function DashboardContent() {
   }, [isClaiming, claimStartedAt]);
 
   const handleWithdraw = async () => {
-    if (!encryptedBalance || encryptedBalance === 0n) {
+    if (!encryptedBalance && accountState !== "mxe") {
       toast.info("No balance to withdraw.");
       return;
     }
+    const amountToWithdraw = encryptedBalance ?? 0n;
     const wasPaused = pollingPausedRef.current;
     pollingPausedRef.current = true;
     setIsPollingPaused(true);
     try {
       setIsWithdrawing(true);
       toast.info("Withdrawing to wallet... this may take 5–15 seconds.");
-      await withdraw(encryptedBalance);
+      await withdraw(amountToWithdraw);
       toast.success("Funds withdrawn to your Solflare wallet!");
       await fetchBalance();
     } catch (err: any) {
@@ -221,101 +238,109 @@ export function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="h-[50vh] flex items-center justify-center text-veil-muted font-body text-[14px]">
-        <div className="w-[24px] h-[24px] rounded-full border-2 border-veil-muted/20 border-t-veil-primary animate-spin mr-[12px]" />
-        Loading Dashboard...
+      <div className="h-[50vh] flex items-center justify-center font-body text-veil-muted">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 rounded-full border-2 border-veil-muted/20 border-t-veil-primary animate-spin" />
+          <span className="text-sm font-semibold tracking-tight">Loading Dashboard...</span>
+        </div>
       </div>
     );
   }
 
   if (!data) {
-    return <div className="h-[50vh] flex items-center justify-center font-body text-veil-text text-[16px]">NOT AUTHORIZED</div>;
+    return <div className="h-[50vh] flex items-center justify-center font-body text-veil-text font-bold tracking-widest text-lg">NOT AUTHORIZED</div>;
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 md:px-12 pt-10 pb-20">
+    <div className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pt-10 pb-20">
       {/* Top Actions & Greeting */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-12">
         <motion.div 
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
+          animate="visible"
           variants={fadeInUp}
         >
-          <h1 className="font-heading text-3xl md:text-4xl font-black text-veil-text flex items-center gap-3">
-            Welcome back, {data.displayName}! <span className="animate-[wiggle_4s_ease-in-out_infinite] inline-block origin-bottom-right">👋</span>
-          </h1>
-          <p className="text-veil-muted font-medium mt-2 text-lg">Here's what's happening with your page today.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="font-heading text-4xl md:text-5xl font-black text-veil-text tracking-tighter">
+              Welcome back, {data.displayName}
+            </h1>
+            <Sparkles className="w-6 h-6 text-veil-primary animate-pulse" />
+          </div>
+          <p className="text-veil-muted font-medium text-lg max-w-xl">
+            Here's what's happening with your page today.
+          </p>
         </motion.div>
         
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
+          className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto"
+        >
           <button
             onClick={togglePolling}
-            className={`pill-button-secondary px-3 py-3 text-base w-full sm:w-auto flex items-center justify-center gap-2 ${
+            className={`px-4 py-3 bg-white border border-black/5 rounded-full font-bold text-sm text-veil-text hover:bg-veil-bg transition-colors flex items-center justify-center gap-2 shadow-sm ${
               isPollingPaused ? "opacity-60" : ""
             }`}
             title={isPollingPaused ? "Resume auto-refresh" : "Pause auto-refresh"}
           >
-            {isPollingPaused ? (
-              <PlayCircle className="w-4 h-4" />
-            ) : (
-              <PauseCircle className="w-4 h-4" />
-            )}
+            {isPollingPaused ? <PlayCircle className="w-4 h-4" /> : <PauseCircle className="w-4 h-4" />}
           </button>
           <button 
             onClick={() => navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/c/${data.slug}`).then(() => toast.success("Link copied!"))}
-            className="pill-button-secondary px-6 py-3 text-base w-full sm:w-auto flex items-center justify-center gap-2"
+            className="px-6 py-3 bg-white border border-black/5 rounded-full font-bold text-sm text-veil-text hover:border-black/20 transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             <Copy className="w-4 h-4" /> Copy Link
           </button>
           <a 
             href={`/c/${data.slug}`} 
             target="_blank"
-            className="pill-button-primary px-6 py-3 text-base w-full sm:w-auto flex items-center justify-center gap-2"
+            className="px-6 py-3 bg-veil-text text-white rounded-full font-bold text-sm hover:bg-black transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)]"
           >
             <ExternalLink className="w-4 h-4" /> View Public Page
           </a>
-        </div>
+        </motion.div>
       </div>
 
       {/* Metrics Overview Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+      >
         {[
           { 
             label: "Current Balance", 
-            value: encryptedBalance !== null ? `$${formatMicroUsdc(Number(encryptedBalance))}` : "---", 
+            value: accountState === "mxe" ? "🔒 MXE" : encryptedBalance !== null ? `$${formatMicroUsdc(Number(encryptedBalance))}` : "---", 
             icon: <Wallet className="w-6 h-6" />, 
-            color: "bg-blue-50 text-veil-primary",
+            color: "text-blue-600 bg-blue-50/50",
             onRefresh: refreshDashboard,
           },
           { 
-            label: "Last 30 Days", 
-            value: `$${formatMicroUsdc(data.stats.totalVolumeUsdc)}`, // Using lifetime volume as mock for 30d
+            label: "Lifetime Volume", 
+            value: `$${formatMicroUsdc(data.stats.totalVolumeUsdc)}`, 
             icon: <TrendingUp className="w-6 h-6" />, 
-            color: "bg-green-50 text-green-500" 
+            color: "text-emerald-600 bg-emerald-50/50" 
           },
           { 
             label: "Total Supporters", 
             value: data.stats.totalSupportEvents.toString(), 
             icon: <Users className="w-6 h-6" />, 
-            color: "bg-veil-secondary/50 text-orange-600" 
+            color: "text-amber-600 bg-amber-50/50" 
           },
         ].map((metric, i) => (
           <motion.div 
             key={i}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
             variants={fadeInUp}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white rounded-[32px] p-6 shadow-card border border-black/5 flex items-center gap-5 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300"
+            className="bg-white rounded-[2rem] p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 flex items-center gap-6 group hover:-translate-y-1 transition-all duration-300 ease-out"
           >
-            <div className={`w-14 h-14 rounded-full ${metric.color} flex items-center justify-center`}>
+            <div className={`w-16 h-16 rounded-[1.25rem] ${metric.color} flex items-center justify-center border border-black/5 shadow-sm group-hover:scale-105 transition-transform`}>
               {metric.icon}
             </div>
             <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <p className="text-veil-muted font-bold text-sm uppercase tracking-wide">{metric.label}</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-veil-muted font-bold text-xs uppercase tracking-wider">{metric.label}</p>
                 {"onRefresh" in metric && (
                   <button
                     onClick={metric.onRefresh}
@@ -327,267 +352,261 @@ export function DashboardContent() {
                   </button>
                 )}
               </div>
-              <h3 className="font-heading text-3xl font-black text-veil-text">{metric.value}</h3>
+              <h3 className="font-heading text-4xl font-black text-veil-text tracking-tighter">{metric.value}</h3>
             </div>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* LEFT COLUMN (Spans 2) */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* LEFT COLUMN */}
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="lg:col-span-8 space-y-8"
+        >
           
           {/* Chart Section */}
           <motion.section 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
             variants={fadeInUp}
-            className="bg-white rounded-[32px] p-8 shadow-card border border-black/5"
+            className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5"
           >
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="font-heading text-2xl font-black text-veil-text flex items-center gap-2">
-                <BarChart3 className="w-6 h-6 text-veil-primary" /> Earnings Overview
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-10">
+              <h2 className="font-heading text-2xl font-black text-veil-text flex items-center gap-3 tracking-tight">
+                <div className="w-10 h-10 rounded-xl bg-veil-primary/10 flex items-center justify-center text-veil-primary">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                Earnings Overview
               </h2>
-              <select className="bg-veil-bg border-none text-veil-text font-bold text-sm rounded-full px-4 py-2 outline-none cursor-pointer focus:ring-2 focus:ring-veil-primary">
-                <option>Last 6 Months</option>
-                <option>This Year</option>
-                <option>All Time</option>
-              </select>
+              <div className="relative">
+                <select className="appearance-none bg-veil-bg border border-black/5 text-veil-text font-bold text-sm rounded-full pl-6 pr-10 py-3 outline-none cursor-pointer focus:ring-2 focus:ring-veil-text transition-all w-full sm:w-auto">
+                  <option>Last 6 Months</option>
+                  <option>This Year</option>
+                  <option>All Time</option>
+                </select>
+                <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-veil-muted" />
+              </div>
             </div>
 
-            <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 mt-6 relative border-b-2 border-veil-bg pb-2">
-              <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs font-bold text-veil-muted/50 pb-2 -ml-2">
+            <div className="h-[280px] flex items-end justify-between gap-2 sm:gap-4 mt-6 relative border-b border-black/10 pb-4">
+              <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs font-bold text-veil-muted/50 pb-4 -ml-1">
                 <span>$2k</span>
                 <span>$1k</span>
                 <span>$0</span>
               </div>
 
-              <div className="w-full flex justify-between items-end h-full pl-8">
-                {[
-                  { h: "30%", label: "Jan", val: "$450" },
-                  { h: "45%", label: "Feb", val: "$680" },
-                  { h: "25%", label: "Mar", val: "$320" },
-                  { h: "60%", label: "Apr", val: "$950" },
-                  { h: "85%", label: "May", val: "$1,250", active: true },
-                ].map((bar, i) => (
-                  <div key={i} className={`relative w-full max-w-[40px] ${bar.active ? 'bg-veil-primary' : 'bg-veil-secondary'} rounded-t-xl transition-colors duration-300 cursor-pointer group`} style={{ height: bar.h }}>
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-veil-text text-white text-xs font-bold py-1 px-2 rounded-lg opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap z-10 pointer-events-none">
-                      {bar.val}
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-veil-text"></div>
-                    </div>
-                    <span className={`absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold ${bar.active ? 'text-veil-text' : 'text-veil-muted'}`}>{bar.label}</span>
-                  </div>
-                ))}
+              <div className="w-full flex justify-between items-end h-full pl-10">
+                {(function buildChartBars() {
+                  const monthlyTotals: Record<string, number> = {};
+                  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                  const now = new Date();
+                  for (let i = 5; i >= 0; i--) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const key = `${d.getFullYear()}-${d.getMonth()}`;
+                    monthlyTotals[key] = 0;
+                  }
+                  for (const ev of data.stats.recentEvents) {
+                    const d = new Date(ev.createdAt);
+                    const key = `${d.getFullYear()}-${d.getMonth()}`;
+                    if (key in monthlyTotals) {
+                      monthlyTotals[key] += ev.amountUsdc;
+                    }
+                  }
+                  const maxVal = Math.max(...Object.values(monthlyTotals), 1);
+                  return Object.entries(monthlyTotals).map(([key, total], i) => {
+                    const [yearStr, monthIdx] = key.split("-");
+                    const monthLabel = monthNames[parseInt(monthIdx)];
+                    const pct = (total / maxVal) * 85;
+                    const isLatest = i === Object.entries(monthlyTotals).length - 1;
+                    return (
+                      <div key={key} className={`relative w-full max-w-[50px] ${isLatest ? 'bg-veil-text' : 'bg-veil-secondary/50 hover:bg-veil-secondary'} rounded-t-2xl transition-colors duration-300 cursor-pointer group`} style={{ height: `${Math.max(pct, 4)}%` }}>
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white border border-black/5 text-veil-text text-sm font-bold py-1.5 px-3 rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-lg whitespace-nowrap z-10 pointer-events-none">
+                          ${(total / 1_000_000).toFixed(2)}
+                        </div>
+                        <span className={`absolute -bottom-10 left-1/2 -translate-x-1/2 text-sm font-bold ${isLatest ? 'text-veil-text' : 'text-veil-muted'}`}>{monthLabel}</span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </motion.section>
 
           {/* Recent Tips Section */}
           <motion.section 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
             variants={fadeInUp}
-            className="bg-white rounded-[32px] p-8 shadow-card border border-black/5"
+            className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5"
           >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="font-heading text-2xl font-black text-veil-text flex items-center gap-2">
-                <Heart className="w-6 h-6 text-pink-500" /> Recent Support
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="font-heading text-2xl font-black text-veil-text flex items-center gap-3 tracking-tight">
+                <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500">
+                  <Heart className="w-5 h-5 fill-current" />
+                </div>
+                Recent Support
               </h2>
-              <button className="text-sm font-bold text-veil-primary hover:text-blue-700 transition-colors">View All</button>
+              <button className="text-sm font-bold text-veil-text bg-veil-bg px-4 py-2 rounded-full hover:bg-black/5 transition-colors">
+                View All
+              </button>
             </div>
 
             <EventFeed events={data.stats.recentEvents} />
           </motion.section>
-        </div>
+        </motion.div>
 
         {/* RIGHT COLUMN */}
-        <div className="space-y-8">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="lg:col-span-4 space-y-8"
+        >
           
           {/* Wallet Card */}
           <motion.section 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
             variants={fadeInUp}
-            className="bg-veil-bg rounded-[32px] p-8 shadow-card border border-black/5 relative overflow-hidden"
+            className="bg-veil-text text-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] border border-black/5 relative overflow-hidden"
           >
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-veil-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+            {/* Ambient inner glow */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-veil-primary/30 rounded-full blur-[80px] pointer-events-none"></div>
+            <div className="absolute inset-0 opacity-10 bg-[url('https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/noise.png')] mix-blend-overlay pointer-events-none" />
             
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-heading text-xl font-black text-veil-text">
-                Your Wallet
-              </h2>
-              <button
-                onClick={refreshDashboard}
-                disabled={isRefreshingBalance}
-                className="p-2 rounded-full hover:bg-white/60 transition-colors disabled:opacity-40"
-                title="Refresh balance"
-              >
-                <RotateCw className={`w-4 h-4 text-veil-muted ${isRefreshingBalance ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-            <p className="text-sm font-bold text-veil-muted mb-4">Available to withdraw</p>
-            {lastRefreshed && !isPollingPaused && (
-              <p className="text-[11px] text-veil-muted/50 -mt-3">
-                Updated {lastRefreshed.toLocaleTimeString()}
-              </p>
-            )}
-            {isPollingPaused && (
-              <p className="text-[11px] text-amber-500/70 -mt-3">
-                Auto-refresh paused
-              </p>
-            )}
-            
-            <div className="mb-8">
-              <h3 className="font-heading text-5xl font-black text-veil-text tracking-tight flex items-start gap-1">
-                <span className="text-2xl mt-1 text-veil-muted">$</span>
-                {encryptedBalance !== null ? formatMicroUsdc(Number(encryptedBalance)) : "---"}
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              <button 
-                onClick={handleClaim}
-                disabled={isClaiming || data.stats.pendingEvents === 0}
-                className="w-full pill-button-primary px-6 py-3.5 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isClaiming ? (
-                  <>
-                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-                      <RotateCw className="w-4 h-4" />
-                    </motion.div>
-                    Processing... {claimElapsedSec > 0 && `(${claimElapsedSec}s)`}
-                  </>
-                ) : (
-                  <>
-                    <RotateCw className="w-4 h-4" />
-                    Claim {data.stats.pendingEvents > 0 ? `${data.stats.pendingEvents} Payment${data.stats.pendingEvents > 1 ? "s" : ""}` : "Payments"}
-                  </>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-xl font-black tracking-tight">
+                  Your Wallet
+                </h2>
+                <button
+                  onClick={refreshDashboard}
+                  disabled={isRefreshingBalance}
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 text-white/70 hover:text-white"
+                  title="Refresh balance"
+                >
+                  <RotateCw className={`w-4 h-4 ${isRefreshingBalance ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+              
+              <div className="mb-10">
+                <p className="text-sm font-bold text-white/60 mb-2 uppercase tracking-widest">Available to withdraw</p>
+                <h3 className="font-heading text-6xl font-black tracking-tighter flex items-start gap-1">
+                  <span className="text-3xl mt-2 text-white/40">$</span>
+                  {accountState === "mxe" ? "🔒" : encryptedBalance !== null ? formatMicroUsdc(Number(encryptedBalance)) : "---"}
+                </h3>
+                {accountState === "mxe" && (
+                  <p className="text-xs text-amber-400/80 mt-3 font-medium">Balance locked — use &ldquo;Withdraw (MXE detected)&rdquo; to claim via Arcium</p>
                 )}
-              </button>
-              <button
-                onClick={handleWithdraw}
-                disabled={isWithdrawing || !encryptedBalance || encryptedBalance === 0n}
-                className="w-full pill-button-secondary bg-transparent border-black/20 hover:bg-white px-6 py-3.5 text-base flex items-center justify-center gap-2 text-veil-muted disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isWithdrawing ? "Withdrawing..." : "Withdraw to Wallet"}
-              </button>
+                {lastRefreshed && !isPollingPaused && (
+                  <p className="text-xs text-white/40 mt-3 font-medium">
+                    Updated {lastRefreshed.toLocaleTimeString()}
+                  </p>
+                )}
+                {isPollingPaused && (
+                  <p className="text-xs text-amber-400/80 mt-3 font-medium flex items-center gap-1.5">
+                    <PauseCircle className="w-3 h-3" /> Auto-refresh paused
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <button 
+                  onClick={handleClaim}
+                  disabled={isClaiming || data.stats.pendingEvents === 0}
+                  className="w-full bg-veil-primary text-white hover:bg-blue-500 px-6 py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_10px_20px_-10px_rgba(114,164,242,0.5)]"
+                >
+                  {isClaiming ? (
+                    <>
+                      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                        <RotateCw className="w-5 h-5" />
+                      </motion.div>
+                      Processing... {claimElapsedSec > 0 && `(${claimElapsedSec}s)`}
+                    </>
+                  ) : (
+                    <>
+                      <RotateCw className="w-5 h-5" />
+                      Claim {data.stats.pendingEvents > 0 ? `${data.stats.pendingEvents} Payment${data.stats.pendingEvents > 1 ? "s" : ""}` : "Payments"}
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleWithdraw}
+                  disabled={isWithdrawing || (encryptedBalance === null && accountState !== "mxe")}
+                  className="w-full bg-white/10 hover:bg-white/20 px-6 py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {isWithdrawing ? "Withdrawing..." : accountState === "mxe" ? "Withdraw (MXE detected)" : "Withdraw to Wallet"}
+                </button>
+              </div>
             </div>
           </motion.section>
 
           {/* Share Page Card */}
           <motion.section 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
             variants={fadeInUp}
-            className="bg-white rounded-[32px] p-8 shadow-card border border-black/5"
+            className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5"
           >
-            <h2 className="font-heading text-xl font-black text-veil-text mb-4 flex items-center gap-2">
-              <Megaphone className="w-6 h-6 text-orange-400" /> Spread the word
+            <h2 className="font-heading text-xl font-black text-veil-text mb-2 flex items-center gap-2">
+              Spread the word
             </h2>
             <p className="text-sm font-medium text-veil-muted mb-6 leading-relaxed">
               Share your link on Twitter, YouTube, or anywhere your fans hang out.
             </p>
             
-            <div className="flex items-center gap-2 bg-veil-bg p-2 rounded-full border border-black/5 mb-6">
-              <div className="bg-white px-4 py-2 rounded-full flex-1 text-sm font-bold text-veil-text truncate select-all">
+            <div className="flex items-center gap-2 bg-veil-bg p-2 rounded-[1.25rem] border border-black/5 mb-6">
+              <div className="bg-white px-4 py-3 rounded-xl flex-1 text-sm font-bold text-veil-text truncate select-all shadow-sm border border-black/5">
                 veil.to/{data.slug}
               </div>
               <button 
                 onClick={() => navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/c/${data.slug}`).then(() => toast.success("Link copied!"))}
-                className="bg-veil-text text-white p-2.5 rounded-full hover:bg-veil-primary transition-colors active:scale-95 flex-shrink-0"
+                className="bg-veil-text text-white p-3 rounded-xl hover:bg-black active:scale-95 transition-all flex-shrink-0 shadow-sm"
               >
                 <Copy className="w-4 h-4" />
               </button>
             </div>
 
-            <button className="w-full bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white rounded-full font-bold px-6 py-3 text-sm flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5">
-              Twitter Share
-            </button>
-          </motion.section>
-
-          {/* Top Supporters */}
-          <motion.section 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-            className="bg-white rounded-[32px] p-8 shadow-card border border-black/5"
-          >
-            <h2 className="font-heading text-xl font-black text-veil-text mb-6 flex items-center gap-2">
-              <Award className="w-6 h-6 text-yellow-500" /> Top Supporters
-            </h2>
-
-            <div className="space-y-4">
-              {[
-                { name: "Sarah Jenkins", val: "$450", img: "https://pquxfbbxflqvtidtlrhl.supabase.co/storage/v1/object/public/hmac-uploads/brand/d8377d16-bae1-4eb6-9fbc-5bcd192d86f4/assets/e1420747-0876-4400-836d-4fc1805dc264.webp", crown: true },
-                { name: "MikeTriesToCode", val: "$200", img: null },
-                { name: "Anonymous", val: "$150", img: null, ghost: true },
-              ].map((s, i) => (
-                <div key={i} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      {s.img ? (
-                        <img src={s.img} alt={s.name} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
-                      ) : (
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 border-white shadow-sm ${s.ghost ? 'bg-veil-primary/20 text-veil-primary' : 'bg-veil-secondary text-veil-text font-bold'}`}>
-                          {s.ghost ? <Ghost className="w-5 h-5" /> : s.name[0]}
-                        </div>
-                      )}
-                      {s.crown && <span className="absolute -top-2 -left-2 text-lg drop-shadow-md transform -rotate-12">👑</span>}
-                    </div>
-                    <span className="font-bold text-veil-text text-sm">{s.name}</span>
-                  </div>
-                  <span className="font-black text-veil-primary text-sm">{s.val}</span>
-                </div>
-              ))}
-            </div>
-            <button className="w-full mt-6 text-sm font-bold text-veil-primary hover:text-blue-700 transition-colors py-2 bg-blue-50 hover:bg-blue-100 rounded-full">
-              View Leaderboard
+            <button className="w-full bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white rounded-[1.25rem] font-bold px-6 py-4 text-sm flex items-center justify-center gap-2 transition-all">
+              Share on Twitter
             </button>
           </motion.section>
 
           {/* Reporting Card */}
           <motion.section 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
             variants={fadeInUp}
-            className="bg-white rounded-[32px] p-8 shadow-card border border-black/5"
+            className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5"
           >
-            <h2 className="font-heading text-xl font-black text-veil-text mb-4">Reporting</h2>
+            <h2 className="font-heading text-xl font-black text-veil-text mb-2 tracking-tight">Reporting</h2>
             <p className="text-sm font-medium text-veil-muted mb-6 leading-relaxed">
               Generate viewing keys to securely prove your encrypted revenue.
             </p>
             <div className="flex flex-col gap-3">
               <button 
                 onClick={() => handleGenerateKey("monthly")}
-                className="group flex items-center justify-between w-full p-4 border border-black/5 rounded-2xl bg-veil-bg hover:bg-veil-secondary transition-colors"
+                className="group flex items-center justify-between w-full p-5 border border-black/5 rounded-2xl bg-white hover:bg-veil-bg transition-colors shadow-sm hover:shadow-none"
               >
                 <div className="flex flex-col items-start">
-                  <span className="font-bold text-veil-text text-sm">Monthly Key</span>
-                  <span className="text-xs text-veil-muted">Current Month</span>
+                  <span className="font-bold text-veil-text text-sm mb-0.5">Monthly Key</span>
+                  <span className="text-xs font-semibold text-veil-muted">Current Month</span>
                 </div>
-                <Download className="w-4 h-4 text-veil-muted group-hover:text-veil-primary" />
+                <div className="w-10 h-10 rounded-full bg-veil-bg group-hover:bg-white flex items-center justify-center transition-colors">
+                  <Download className="w-4 h-4 text-veil-text" />
+                </div>
               </button>
               <button 
                 onClick={() => handleGenerateKey("yearly")}
-                className="group flex items-center justify-between w-full p-4 border border-black/5 rounded-2xl bg-veil-bg hover:bg-veil-secondary transition-colors"
+                className="group flex items-center justify-between w-full p-5 border border-black/5 rounded-2xl bg-white hover:bg-veil-bg transition-colors shadow-sm hover:shadow-none"
               >
                 <div className="flex flex-col items-start">
-                  <span className="font-bold text-veil-text text-sm">Yearly Key</span>
-                  <span className="text-xs text-veil-muted">Full Year Scope</span>
+                  <span className="font-bold text-veil-text text-sm mb-0.5">Yearly Key</span>
+                  <span className="text-xs font-semibold text-veil-muted">Full Year Scope</span>
                 </div>
-                <Download className="w-4 h-4 text-veil-muted group-hover:text-veil-primary" />
+                <div className="w-10 h-10 rounded-full bg-veil-bg group-hover:bg-white flex items-center justify-center transition-colors">
+                  <Download className="w-4 h-4 text-veil-text" />
+                </div>
               </button>
             </div>
           </motion.section>
-        </div>
+
+        </motion.div>
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ export interface CreatorPublic {
   stats: {
     totalSupportEvents: number;
   };
+  recentPublicEvents?: SupportEventPublic[];
 }
 
 // Returned by GET /api/dashboard (creator only, more data)
@@ -50,6 +51,8 @@ export interface TierPublic {
 export interface SupportEventPublic {
   id: string;
   amountUsdc: number;
+  message: string | null;
+  isMessagePublic: boolean;
   utxoSignature: string | null;
   claimedAt: string | null;
   createdAt: string;

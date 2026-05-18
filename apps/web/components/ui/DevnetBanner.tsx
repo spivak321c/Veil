@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DevFaucetButton } from "@/components/creator/DevFaucetButton";
 
 export function DevnetBanner() {
   const [show, setShow] = useState(false);
@@ -20,8 +19,6 @@ export function DevnetBanner() {
         <span className="w-1.5 h-1.5 rounded-full bg-veil-primary animate-pulse"></span>
         Devnet Demo
       </div>
-      <div className="h-4 w-[1px] bg-black/10"></div>
-      <DevFaucetButton />
     </div>
   );
 }

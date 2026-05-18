@@ -25,25 +25,22 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Get aggregate stats
-    const [totalSupportEvents, claimedEvents, totalVolumeResult, recentEvents] =
-      await Promise.all([
-        prisma.supportEvent.count({
-          where: { creatorId: creator.id },
-        }),
-        prisma.supportEvent.count({
-          where: { creatorId: creator.id, claimedAt: { not: null } },
-        }),
-        prisma.supportEvent.aggregate({
-          where: { creatorId: creator.id, claimedAt: { not: null } },
-          _sum: { amountUsdc: true },
-        }),
-        prisma.supportEvent.findMany({
-          where: { creatorId: creator.id },
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        }),
-      ]);
+    // Get aggregate stats — sequential to avoid exhausting Neon's 15-connection pool
+    const totalSupportEvents = await prisma.supportEvent.count({
+      where: { creatorId: creator.id },
+    });
+    const claimedEvents = await prisma.supportEvent.count({
+      where: { creatorId: creator.id, claimedAt: { not: null } },
+    });
+    const totalVolumeResult = await prisma.supportEvent.aggregate({
+      where: { creatorId: creator.id, claimedAt: { not: null } },
+      _sum: { amountUsdc: true },
+    });
+    const recentEvents = await prisma.supportEvent.findMany({
+      where: { creatorId: creator.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
 
     const pendingEvents = totalSupportEvents - claimedEvents;
     const totalVolumeUsdc = totalVolumeResult._sum.amountUsdc ?? 0;
@@ -51,12 +48,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const recentEventsMapped: SupportEventPublic[] = recentEvents.map((e: { 
       id: string; 
       amountUsdc: number; 
+      message: string | null;
+      isMessagePublic: boolean;
       utxoSignature: string | null; 
       claimedAt: Date | null; 
       createdAt: Date;
     }) => ({
       id: e.id,
       amountUsdc: e.amountUsdc,
+      message: e.message,
+      isMessagePublic: e.isMessagePublic,
       utxoSignature: e.utxoSignature,
       claimedAt: e.claimedAt?.toISOString() ?? null,
       createdAt: e.createdAt.toISOString(),

@@ -16,6 +16,8 @@ export default function SendPage({ params }: { params: Promise<{ slug: string }>
   const { slug } = use(params);
   const { connected } = useWalletConnection();
   const [amount, setAmount] = useState<number | "">("");
+  const [message, setMessage] = useState("");
+  const [isMessagePublic, setIsMessagePublic] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [creator, setCreator] = useState<any>(null);
 
@@ -160,7 +162,21 @@ export default function SendPage({ params }: { params: Promise<{ slug: string }>
                       </div>
                     </div>
 
-                    {/* Privacy badge */}
+                    {/* Message */}
+                    <div>
+                      <label className="block text-xs font-bold text-veil-muted uppercase tracking-wider mb-3">
+                        Message (optional)
+                      </label>
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="w-full bg-veil-bg border border-black/5 rounded-2xl p-4 font-medium text-veil-text placeholder:text-veil-muted/40 focus:outline-none focus:border-veil-primary/40 focus:bg-white transition-all resize-none"
+                        rows={3}
+                        placeholder="Say something nice to the creator..."
+                      />
+                    </div>
+
+                    {/* Public message toggle */}
                     <div className="flex items-start gap-3 p-4 bg-veil-bg rounded-2xl border border-black/5">
                       <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
                         <ShieldCheck className="w-4 h-4 text-veil-primary" />
@@ -204,6 +220,8 @@ export default function SendPage({ params }: { params: Promise<{ slug: string }>
           creatorName={creator.displayName}
           recipientAddress={creator.walletAddress}
           amountMicroUsdc={Number(amount) * 1_000_000}
+          message={message || undefined}
+          isMessagePublic={isMessagePublic}
           onClose={() => setIsSending(false)}
         />
       )}
