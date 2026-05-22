@@ -5,7 +5,7 @@ import { useWalletConnection } from "@solana/react-hooks";
 import { ChevronDown, LogOut, Wallet as WalletIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function ConnectButton() {
+export function ConnectButton({ className }: { className?: string }) {
   const { connectors, connect, disconnect, connected, wallet } = useWalletConnection();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -25,9 +25,11 @@ export function ConnectButton() {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
+  const containerClass = className || "relative inline-block text-left";
+
   if (connected && wallet) {
     return (
-      <div className="relative inline-block text-left" ref={dropdownRef}>
+      <div className={containerClass} ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="inline-flex items-center gap-[8px] h-[44px] px-[24px] rounded-[30px] bg-ink text-canvas font-sans font-medium hover:bg-ink/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ink"
@@ -64,7 +66,7 @@ export function ConnectButton() {
   }
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className={containerClass} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center gap-[8px] h-[44px] px-[24px] rounded-[30px] bg-ink text-canvas font-sans font-medium hover:bg-ink/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ink"

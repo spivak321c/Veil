@@ -301,7 +301,7 @@ export default function LandingPage() {
           <BackgroundMesh />
           <FloatingParticles />
 
-          <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-12 pt-32 pb-24 flex flex-col lg:flex-row items-center gap-16">
+          <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12 pt-24 sm:pt-32 pb-16 sm:pb-24 flex flex-col lg:flex-row items-center gap-10 sm:gap-16">
             {/* Left Content */}
             <motion.div
               style={{ y: heroY, opacity: heroOpacity }}
@@ -390,7 +390,7 @@ export default function LandingPage() {
               {/* Illustration / Slideshow Wrapper */}
               <motion.div
                 style={{ x: parallaxX, y: parallaxY }}
-                className="relative z-10 w-full h-full flex items-center justify-center p-8 md:p-12 overflow-hidden rounded-[3rem]"
+                className="relative z-10 w-full h-full flex items-center justify-center p-6 sm:p-8 md:p-12 overflow-hidden rounded-[3rem]"
               >
                 <AnimatePresence>
                   {HERO_IMAGES.map((src, idx) => (
@@ -474,7 +474,7 @@ export default function LandingPage() {
 
         {/* POWERED BY UMBRA + ARCIUM */}
         <section className="relative w-full bg-white border-y border-black/5 py-12 overflow-hidden">
-          <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 text-center">
+          <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12 text-center">
             <motion.div
               initial="hidden"
               whileInView="show"
@@ -512,13 +512,13 @@ export default function LandingPage() {
         <section id="features" className="relative w-full bg-veil-bg py-28 overflow-hidden">
           <BackgroundMesh />
 
-          <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12">
             <motion.div
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-80px" }}
               variants={containerStagger}
-              className="mb-16"
+              className="mb-12 sm:mb-16"
             >
               <motion.span variants={fadeUp} className="text-xs font-semibold tracking-[0.15em] uppercase text-veil-primary mb-4 block">
                 Why Veil
@@ -531,7 +531,7 @@ export default function LandingPage() {
               </motion.h2>
               <motion.p
                 variants={fadeUp}
-                className="text-veil-muted text-lg md:text-xl mt-6 max-w-[55ch] leading-relaxed"
+                className="text-veil-muted text-base sm:text-lg md:text-xl mt-4 sm:mt-6 max-w-[55ch] leading-relaxed"
               >
                 Normal public payments expose your supporters to the entire internet. Veil
                 magically protects everyone&apos;s privacy behind the scenes using zero-knowledge 
@@ -550,7 +550,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ ...springGentle, delay: 0 }}
                 whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="md:col-span-3 md:row-span-2 bg-white rounded-[2rem] p-8 md:p-10 border border-black/5 shadow-sm flex flex-col relative overflow-hidden group"
+                className="md:col-span-3 md:row-span-2 bg-white rounded-[2rem] p-6 sm:p-8 md:p-10 border border-black/5 shadow-sm flex flex-col relative overflow-hidden group"
               >
                 <div className="relative z-10 flex-1 flex flex-col">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-veil-primary to-veil-primary-deep flex items-center justify-center shadow-md mb-6">
@@ -589,7 +589,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ ...springGentle, delay: 0.1 }}
                 whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="md:col-span-3 bg-veil-bg-alt rounded-[2rem] p-8 md:p-10 border border-black/5 flex flex-col relative overflow-hidden group"
+                className="md:col-span-3 bg-veil-bg-alt rounded-[2rem] p-6 sm:p-8 md:p-10 border border-black/5 flex flex-col relative overflow-hidden group"
               >
                 <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6">
                   <FileCheck2 className="w-6 h-6 text-veil-text" />
@@ -615,7 +615,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ ...springGentle, delay: 0.15 }}
                 whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="md:col-span-2 bg-veil-text text-white rounded-[2rem] p-8 md:p-10 flex flex-col relative overflow-hidden group"
+                className="md:col-span-2 bg-veil-text text-white rounded-[2rem] p-6 sm:p-8 md:p-10 flex flex-col relative overflow-hidden group"
               >
                 <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-6 backdrop-blur-sm">
                   <Banknote className="w-6 h-6 text-white" />
@@ -642,7 +642,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ ...springGentle, delay: 0.2 }}
                 whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="md:col-span-2 bg-white rounded-[2rem] p-8 md:p-10 border border-black/5 flex flex-col relative overflow-hidden group"
+                className="md:col-span-2 bg-white rounded-[2rem] p-6 sm:p-8 md:p-10 border border-black/5 flex flex-col relative overflow-hidden group"
               >
                 <div className="w-12 h-12 rounded-xl bg-veil-secondary/50 flex items-center justify-center mb-6">
                   <Zap className="w-6 h-6 text-veil-text" />
@@ -671,7 +671,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ ...springGentle, delay: 0.25 }}
                 whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="md:col-span-2 bg-gradient-to-br from-veil-primary/5 to-veil-arcium/5 rounded-[2rem] p-8 md:p-10 border border-veil-primary/10 flex flex-col relative overflow-hidden group"
+                className="md:col-span-2 bg-gradient-to-br from-veil-primary/5 to-veil-arcium/5 rounded-[2rem] p-6 sm:p-8 md:p-10 border border-veil-primary/10 flex flex-col relative overflow-hidden group"
               >
                 <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-6">
                   <Globe className="w-6 h-6 text-veil-primary" />
@@ -705,7 +705,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ ...springGentle, delay: 0.3 }}
-                className="md:col-span-6 bg-veil-bg-alt rounded-[2rem] p-10 md:p-14 border border-black/5 relative overflow-hidden"
+                className="md:col-span-6 bg-veil-bg-alt rounded-[2rem] p-8 sm:p-10 md:p-14 border border-black/5 relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none" />
                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
@@ -849,7 +849,7 @@ export default function LandingPage() {
                   viewport={{ once: true }}
                   transition={{ ...springGentle, delay: i * 0.12 }}
                   whileHover={{ y: -4, transition: { duration: 0.3 } }}
-                  className="bg-white rounded-[2rem] p-8 md:p-10 border border-black/5 shadow-sm flex flex-col justify-between relative group"
+                  className="bg-white rounded-[2rem] p-6 sm:p-8 md:p-10 border border-black/5 shadow-sm flex flex-col justify-between relative group"
                 >
                   <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-veil-primary/10 flex items-center justify-center">
                     <span className="text-veil-primary text-lg font-serif leading-none">"</span>
@@ -906,7 +906,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="bg-veil-bg/50 rounded-[2rem] p-8 md:p-12"
+              className="bg-veil-bg/50 rounded-[2rem] p-6 sm:p-8 md:p-12"
             >
               {[
                 {
@@ -937,7 +937,7 @@ export default function LandingPage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="relative w-full py-32 overflow-hidden">
+        <section className="relative w-full py-20 sm:py-32 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-veil-text via-veil-text to-veil-primary/20" />
           <div className="absolute inset-0 bg-noise opacity-10 mix-blend-overlay pointer-events-none" />
 

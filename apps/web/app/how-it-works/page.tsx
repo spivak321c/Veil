@@ -64,7 +64,7 @@ export default function HowItWorksPage() {
             <div className="absolute left-[39px] top-10 bottom-10 w-0.5 bg-black/5 -z-10 hidden md:block" />
 
             {/* Section 1 */}
-            <motion.div variants={fadeInUp} className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 flex flex-col md:flex-row gap-8 items-start group hover:border-black/10 transition-colors">
+            <motion.div variants={fadeInUp} className="bg-white rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 flex flex-col md:flex-row gap-6 sm:gap-8 items-start group hover:border-black/10 transition-colors">
               <div className="w-20 h-20 rounded-[1.5rem] bg-veil-bg flex items-center justify-center shrink-0 border border-black/5 shadow-sm group-hover:scale-105 transition-transform">
                 <EyeOff className="w-8 h-8 text-veil-text" />
               </div>
@@ -86,7 +86,7 @@ export default function HowItWorksPage() {
             </motion.div>
 
             {/* Section 2 */}
-            <motion.div variants={fadeInUp} className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 flex flex-col md:flex-row gap-8 items-start group hover:border-black/10 transition-colors">
+            <motion.div variants={fadeInUp} className="bg-white rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 flex flex-col md:flex-row gap-6 sm:gap-8 items-start group hover:border-black/10 transition-colors">
               <div className="w-20 h-20 rounded-[1.5rem] bg-veil-primary/10 flex items-center justify-center shrink-0 border border-veil-primary/10 shadow-sm group-hover:scale-105 transition-transform">
                 <Zap className="w-8 h-8 text-veil-primary" />
               </div>
@@ -109,7 +109,7 @@ export default function HowItWorksPage() {
             </motion.div>
 
             {/* Section 3 */}
-            <motion.div variants={fadeInUp} className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 flex flex-col md:flex-row gap-8 items-start group hover:border-black/10 transition-colors">
+            <motion.div variants={fadeInUp} className="bg-white rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.02)] border border-black/5 flex flex-col md:flex-row gap-6 sm:gap-8 items-start group hover:border-black/10 transition-colors">
               <div className="w-20 h-20 rounded-[1.5rem] bg-green-50 flex items-center justify-center shrink-0 border border-green-100 shadow-sm group-hover:scale-105 transition-transform">
                 <Key className="w-8 h-8 text-green-600" />
               </div>
