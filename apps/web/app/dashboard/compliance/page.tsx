@@ -1,8 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ViewingKeyExport } from "@/components/umbra/ViewingKeyExport";
 
 export default function CompliancePage() {
+  const [creatorSlug, setCreatorSlug] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    fetch("/api/dashboard")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data?.slug) setCreatorSlug(json.data.slug);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="space-y-[48px] pb-[48px] pt-[24px] font-sans">
       <div>
@@ -11,7 +23,7 @@ export default function CompliancePage() {
       </div>
 
       <div className="max-w-2xl">
-        <ViewingKeyExport />
+        <ViewingKeyExport creatorSlug={creatorSlug} />
       </div>
     </div>
   );

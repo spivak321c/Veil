@@ -62,7 +62,7 @@ export function SendFlow({ creatorSlug, creatorName, recipientAddress, amountMic
         console.error("[SendFlow] Error recording event:", err);
       }
 
-      router.push(`/send/success?creator=${encodeURIComponent(creatorName)}&tx=${signature}`);
+      router.push(`/send/success?creator=${encodeURIComponent(creatorName)}&tx=${signature}&amount=${amountMicroUsdc}&slug=${encodeURIComponent(creatorSlug)}`);
     } catch (err: any) {
       console.error(err);
     }

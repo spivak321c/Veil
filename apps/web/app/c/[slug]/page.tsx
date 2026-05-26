@@ -2,12 +2,13 @@
 
 import { useEffect, useState, use } from "react";
 import { useWalletConnection } from "@solana/react-hooks";
-import { Heart, Share2, Image as ImageIcon, MessageSquareHeart, Lock, PartyPopper, Pencil, User, Check, ShieldCheck } from "lucide-react";
+import { Heart, Share2, Image as ImageIcon, MessageSquareHeart, Lock, PartyPopper, Pencil, User, Check, ShieldCheck, Link as LinkIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { CreatorPublic, TierPublic } from "@veil/db";
 import { SendFlow } from "@/components/umbra/SendFlow";
 import Link from "next/link";
+import { toast } from "sonner";
 import VeilHeader from "@/components/VeilHeader";
 import VeilFooter from "@/components/VeilFooter";
 
@@ -135,7 +136,14 @@ export default function CreatorPage({ params }: { params: Promise<{ slug: string
                   </div>
                   
                   <div className="absolute top-6 right-6 flex gap-2">
-                    <button className="w-10 h-10 rounded-full bg-veil-bg/50 border border-black/5 text-veil-text hover:text-veil-primary hover:bg-white flex items-center justify-center transition-all shadow-sm">
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/tip/${slug}`);
+                        toast.success("Tip jar link copied!");
+                      }}
+                      title="Copy private tip link"
+                      className="w-10 h-10 rounded-full bg-veil-bg/50 border border-black/5 text-veil-text hover:text-veil-primary hover:bg-white flex items-center justify-center transition-all shadow-sm"
+                    >
                       <Share2 className="w-4 h-4" />
                     </button>
                   </div>

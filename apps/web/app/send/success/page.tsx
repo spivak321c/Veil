@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, ExternalLink, Heart, ShieldCheck } from "lucide-react";
+import { Check, ExternalLink, Heart, ShieldCheck, Download } from "lucide-react";
 import Link from "next/link";
 import VeilHeader from "@/components/VeilHeader";
 import VeilFooter from "@/components/VeilFooter";
@@ -14,6 +14,37 @@ function SendSuccessContent() {
   const searchParams = useSearchParams();
   const creator = searchParams.get("creator") || "the creator";
   const tx = searchParams.get("tx");
+  const amount = searchParams.get("amount");
+  const slug = searchParams.get("slug");
+
+  const handleDownloadReceipt = () => {
+    const receipt = {
+      format: "veil-patron-receipt-v1",
+      description: "Anonymous proof of support via Veil + Umbra Protocol",
+      creatorSlug: slug || undefined,
+      creatorDisplayName: creator,
+      amountUsdc: amount ? Number(amount) / 1_000_000 : undefined,
+      utxoSignature: tx || undefined,
+      sentAt: new Date().toISOString(),
+      explorerUrl: tx
+        ? `https://explorer.solana.com/tx/${tx}?cluster=devnet`
+        : undefined,
+      privacyNote:
+        "This receipt proves a private payment was made via the Umbra mixer. No patron wallet address is recorded — the on-chain link between sender and recipient is severed by zero-knowledge proof.",
+    };
+
+    const blob = new Blob([JSON.stringify(receipt, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `veil-receipt-${slug || "support"}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-[100dvh] relative flex flex-col bg-veil-bg text-veil-text font-body selection:bg-veil-primary selection:text-white">
@@ -64,6 +95,19 @@ function SendSuccessContent() {
                 <ExternalLink className="w-4 h-4 text-veil-muted group-hover:text-veil-text transition-colors" />
               </Link>
             )}
+
+            <button
+              onClick={handleDownloadReceipt}
+              className="flex items-center justify-between p-5 rounded-2xl border border-black/5 bg-veil-bg hover:bg-veil-secondary transition-colors group shadow-sm hover:shadow-none"
+            >
+              <div className="flex items-center gap-3">
+                <Download className="w-5 h-5 text-veil-primary" />
+                <span className="font-bold text-veil-text text-sm">Download anonymous receipt</span>
+              </div>
+              <span className="text-xs font-bold text-veil-muted group-hover:text-veil-text transition-colors">
+                .json
+              </span>
+            </button>
             
             <Link 
               href="/explore" 

@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useViewingKey } from "@/lib/umbra/useViewingKey";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { FileKey, Copy, Download, Key } from "lucide-react";
+import { FileKey, Copy, Download, Key, Link as LinkIcon, Award } from "lucide-react";
 import { toast } from "sonner";
+import { APP_URL } from "@/lib/constants";
 
-export function ViewingKeyExport() {
+export function ViewingKeyExport({ creatorSlug }: { creatorSlug?: string }) {
   const { deriveMonthly, deriveYearly } = useViewingKey();
   const [scope, setScope] = useState<"monthly" | "yearly">("monthly");
   const [year, setYear] = useState(new Date().getFullYear());
@@ -64,6 +65,31 @@ export function ViewingKeyExport() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleCopyShareLink = () => {
+    if (!key) return;
+    const params = new URLSearchParams({
+      key,
+      scope,
+      year: String(year),
+      ...(scope === "monthly" ? { month: String(month) } : {}),
+    });
+    const shareUrl = `${APP_URL}/verify?${params.toString()}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Share link copied to clipboard");
+  };
+
+  const handleCopyRevenueBadge = () => {
+    if (!key || !creatorSlug) return;
+    const period =
+      scope === "monthly"
+        ? `${year}-${String(month).padStart(2, "0")}`
+        : String(year);
+    const params = new URLSearchParams({ key });
+    const badgeUrl = `${APP_URL}/c/${creatorSlug}/revenue/${period}?${params.toString()}`;
+    navigator.clipboard.writeText(badgeUrl);
+    toast.success("Revenue badge URL copied");
   };
 
   return (
@@ -128,10 +154,22 @@ export function ViewingKeyExport() {
               <div className="font-mono text-[14px] break-all text-ink bg-canvas p-[16px] rounded-[16px] border border-iron/10 mb-[16px]">
                 {key}
               </div>
-              <Button onClick={handleDownload} variant="secondary" className="w-full">
-                <Download className="w-[16px] h-[16px] mr-[8px]" />
-                Download JSON
-              </Button>
+              <div className="flex flex-col gap-[10px]">
+                <Button onClick={handleCopyShareLink} variant="secondary" className="w-full">
+                  <LinkIcon className="w-[16px] h-[16px] mr-[8px]" />
+                  Copy Share Link
+                </Button>
+                {creatorSlug && (
+                  <Button onClick={handleCopyRevenueBadge} variant="secondary" className="w-full">
+                    <Award className="w-[16px] h-[16px] mr-[8px]" />
+                    Copy Revenue Badge URL
+                  </Button>
+                )}
+                <Button onClick={handleDownload} variant="secondary" className="w-full">
+                  <Download className="w-[16px] h-[16px] mr-[8px]" />
+                  Download JSON
+                </Button>
+              </div>
             </div>
           </div>
         )}
