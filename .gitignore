@@ -39,5 +39,8 @@ funder.json
 **/demo-wallets.json
 scripts
 Redesign
-#skill
-#md
+skill
+md
+examples
+debug_hash.cjs
+debug_hash.mjs
