@@ -25,8 +25,10 @@ import {
   PauseCircle,
   PlayCircle,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  FileKey,
 } from "lucide-react";
+import Link from "next/link";
 import { formatMicroUsdc } from "@/lib/constants";
 import { EventFeed } from "@/components/creator/EventFeed";
 import type { CreatorFull } from "@veil/db";
@@ -552,12 +554,25 @@ export function DashboardContent() {
               Share your link on Twitter, YouTube, or anywhere your fans hang out.
             </p>
             
-            <div className="flex items-center gap-2 bg-veil-bg p-2 rounded-[1.25rem] border border-black/5 mb-6">
+            <div className="flex items-center gap-2 bg-veil-bg p-2 rounded-[1.25rem] border border-black/5 mb-4">
               <div className="bg-white px-4 py-3 rounded-xl flex-1 text-sm font-bold text-veil-text truncate select-all shadow-sm border border-black/5">
                 veil.to/{data.slug}
               </div>
               <button 
-                onClick={() => navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/c/${data.slug}`).then(() => toast.success("Link copied!"))}
+                onClick={() => navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/c/${data.slug}`).then(() => toast.success("Profile link copied!"))}
+                className="bg-veil-text text-white p-3 rounded-xl hover:bg-black active:scale-95 transition-all flex-shrink-0 shadow-sm"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 bg-veil-bg p-2 rounded-[1.25rem] border border-black/5 mb-6">
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl flex-1 text-sm font-bold text-veil-text truncate">
+                <Megaphone className="w-4 h-4 text-veil-primary" />
+                Tip Jar
+              </div>
+              <button 
+                onClick={() => navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/tip/${data.slug}`).then(() => toast.success("Tip jar link copied!"))}
                 className="bg-veil-text text-white p-3 rounded-xl hover:bg-black active:scale-95 transition-all flex-shrink-0 shadow-sm"
               >
                 <Copy className="w-4 h-4" />
@@ -603,6 +618,18 @@ export function DashboardContent() {
                   <Download className="w-4 h-4 text-veil-text" />
                 </div>
               </button>
+              <Link 
+                href="/dashboard/compliance"
+                className="group flex items-center justify-between w-full p-5 border border-black/5 rounded-2xl bg-white hover:bg-veil-bg transition-colors shadow-sm hover:shadow-none mt-2"
+              >
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-veil-text text-sm mb-0.5">Full Compliance Dashboard</span>
+                  <span className="text-xs font-semibold text-veil-muted">Shareable links & revenue badges</span>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-veil-bg group-hover:bg-white flex items-center justify-center transition-colors">
+                  <FileKey className="w-4 h-4 text-veil-text" />
+                </div>
+              </Link>
             </div>
           </motion.section>
 

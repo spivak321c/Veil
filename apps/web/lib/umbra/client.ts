@@ -3,69 +3,91 @@ import {
   getPollingTransactionForwarder,
   getPollingComputationMonitor,
 } from "@umbra-privacy/sdk";
-import type { IUmbraSigner } from "@umbra-privacy/sdk/interfaces";
+import type { IUmbraSigner } from "@umbra-privacy/sdk";
+import type { MasterSeed } from "@umbra-privacy/sdk/types";
+import {
+  createBrowserStorageBackend,
+  createShardedNullifierStore,
+  createShardedUtxoDataStore,
+} from "@umbra-privacy/sdk/store-adapters";
+import type { Network } from "@umbra-privacy/sdk/constants";
 
-const DEVNET_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
-const DEVNET_WSS = process.env.NEXT_PUBLIC_SOLANA_WSS_URL || "wss://api.devnet.solana.com";
+const SOLANA_NETWORK: Network = "devnet";
+const SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+const SOLANA_WSS = process.env.NEXT_PUBLIC_SOLANA_WSS_URL || "wss://api.devnet.solana.com";
+
+const MASTER_SEED_STORAGE_KEY = "veil_umbra_master_seed";
 
 export async function initUmbraClient(wallet: IUmbraSigner) {
-  console.log("[client] Initializing Umbra client with RPC:", DEVNET_RPC);
-  console.log("[client] Using polling-based transaction forwarder (WS fallback only for monitoring)");
+  console.log("[client] Initializing Umbra client with RPC:", SOLANA_RPC);
 
-  // Use polling-based forwarder — more reliable than WebSocket on devnet
   const transactionForwarder = getPollingTransactionForwarder({
-    rpcUrl: DEVNET_RPC,
+    rpcUrl: SOLANA_RPC,
   });
 
-  // Use polling-based computation monitor as fallback when WS is unreliable
   const computationMonitor = getPollingComputationMonitor({
-    rpcUrl: DEVNET_RPC,
+    rpcUrl: SOLANA_RPC,
   });
 
-  const client = await getUmbraClient(
-    {
-      signer: wallet,
-      network: "devnet",
-      rpcUrl: DEVNET_RPC,
-      rpcSubscriptionsUrl: DEVNET_WSS,
-      indexerApiEndpoint: "https://utxo-indexer.api-devnet.umbraprivacy.com",
-      // deferMasterSeedSignature: false (default) — derive master seed at client init
-      // so the X25519 key is ready before dashboard queries encrypted balance.
+  let cachedSeed: MasterSeed | undefined;
+  const masterSeedStorage = {
+    load: async () => {
+      if (cachedSeed !== undefined) {
+        return { exists: true, seed: cachedSeed } as const;
+      }
+      try {
+        const stored = localStorage.getItem(MASTER_SEED_STORAGE_KEY);
+        if (stored) {
+          const bytes = Uint8Array.from(atob(stored), (c) => c.charCodeAt(0));
+          if (bytes.length === 64) {
+            cachedSeed = bytes as unknown as MasterSeed;
+            return { exists: true, seed: cachedSeed } as const;
+          }
+        }
+      } catch (e) {
+        console.warn("[client] Failed to load master seed from localStorage:", e);
+      }
+      return { exists: false } as const;
     },
-    {
-      transactionForwarder,
-      computationMonitor,
-    }
-  );
+    store: async (seed: MasterSeed) => {
+      cachedSeed = seed;
+      try {
+        const encoded = btoa(String.fromCharCode(...seed));
+        localStorage.setItem(MASTER_SEED_STORAGE_KEY, encoded);
+        return { success: true } as const;
+      } catch (e) {
+        console.warn("[client] Failed to store master seed:", e);
+        return { success: false, error: String(e) } as const;
+      }
+    },
+  };
 
-  // Generate X25519 private key from master seed if not already stored
-  // console.log("[client] Checking X25519 private key...");
-  // const keyContext = {
-  //   signerAddress: client.signer.address.toString(),
-  //   domainSeparator: "MasterViewingKey/0",
-  //   network: client.network,
-  //   protocolVersion: "1.0.0",
-  //   algorithmVersion: "1.0.0",
-  //   schemeVersion: "1.0.0",
-  // } as const;
-  // try {
-  //   const x25519Key = await client.x25519PrivateKey.load(keyContext).catch(() => null);
-  //   if (!x25519Key) {
-  //     console.log("[client] X25519 private key not found, generating...");
-  //     await client.x25519PrivateKey.generate(keyContext);
-  //     console.log("[client] X25519 private key generated and stored");
-  //   } else {
-  //     console.log("[client] X25519 private key already exists");
-  //   }
-  // } catch (e: any) {
-  //   console.error("[client] Failed to generate X25519 key:", e.message);
-  // }
+  const config = {
+    signer: wallet,
+    network: SOLANA_NETWORK,
+    rpcUrl: SOLANA_RPC,
+    rpcSubscriptionsUrl: SOLANA_WSS,
+    indexerApiEndpoint: "https://utxo-indexer.api-devnet.umbraprivacy.com",
+  };
 
-  // console.log("[client] Umbra client initialized successfully with polling forwarder");
-  // console.log("[client] Client keys:", Object.keys(client));
-  // console.log("[client] Has fetchUtxoData:", typeof client.fetchUtxoData);
-  // console.log("[client] Has fetchMerkleProof:", typeof client.fetchMerkleProof);
-  // console.log("[client] indexerApiEndpoint:", (client as any).indexerApiEndpoint);
+  const transport = { transactionForwarder, computationMonitor };
+
+  // Phase 1 — bootstrap client (no stores). Derives + caches the master seed.
+  const bootstrap = await getUmbraClient(config, { masterSeedStorage, ...transport });
+
+  // Phase 2 — create the standard sharded encrypted stores.
+  const backend = createBrowserStorageBackend();
+  const nullifierStore = await createShardedNullifierStore(bootstrap, backend);
+  const utxoDataStore = await createShardedUtxoDataStore(bootstrap, backend);
+
+  // Phase 3 — final client with stores wired in.
+  const client = await getUmbraClient(config, {
+    masterSeedStorage,
+    utxoDataStore,
+    nullifierStore,
+    ...transport,
+  });
+
   console.log("[client] Umbra client initialized successfully");
   return client;
 }

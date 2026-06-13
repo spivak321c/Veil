@@ -11,6 +11,7 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "3.9.1",
+    "@noble/hashes": "^2.2.0",
     "@phosphor-icons/react": "^2.1.10",
     "@prisma/client": "5.22.0",
     "@solana/client": "^1.7.0",
@@ -20,8 +21,7 @@
     "@solana/web3-compat": "^0.0.21",
     "@solana/web3.js": "^1.98.0",
     "@solana/webcrypto-ed25519-polyfill": "^6.9.0",
-    "@umbra-privacy/sdk": "^4.0.0",
-    "@umbra-privacy/web-zk-prover": "^2.0.1",
+    "@umbra-privacy/sdk": "5.0.0-rc.6",
     "@wallet-standard/base": "^1.1.0",
     "@wallet-standard/core": "^1.1.1",
     "bs58": "^6.0.0",

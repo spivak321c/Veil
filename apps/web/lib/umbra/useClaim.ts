@@ -1,58 +1,51 @@
+import { getUmbraRelayer } from "@umbra-privacy/sdk";
+import type { Address } from "@solana/kit";
 import {
-  getClaimableUtxoScannerFunction,
-  getUmbraRelayer,
-  getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction,
-} from "@umbra-privacy/sdk";
-import { getClaimReceiverClaimableUtxoIntoEncryptedBalanceProver } from "@umbra-privacy/web-zk-prover";
+  reconcileWithOnChainState,
+  type UtxoDataEntry,
+} from "@umbra-privacy/sdk/store";
+import {
+  getBurnableStealthPoolNoteScannerFunction,
+  getReceiverBurnableStealthPoolNoteIntoETABurnerFunction,
+} from "@umbra-privacy/sdk/burn";
+import { burnReceiverIntoEncryptedProver } from "./zk-prover";
 import { useUmbraStore } from "./store";
 
-// Module-level in-memory cache for the ZK assets (.zkey + .wasm).
-// The SDK's default load/store are no-ops — it re-downloads the .zkey from
-// CloudFront on every prove() call (~100MB). ERR_HTTP2_PROTOCOL_ERROR happens
-// when CloudFront resets the stream mid-download on slow connections.
-// Caching the bytes in memory means the download only happens once per
-// browser session; subsequent prove() calls skip the fetch entirely.
-type ZkAssetData = { zkey: Uint8Array; wasm: Uint8Array };
-const zkAssetCache = new Map<string, ZkAssetData>();
+const BURN_BATCH_SIZE = 1;
 
-const zkAssetLoader = async (context: { type: string; variant?: string }) => {
-  const key = `${context.type}:${context.variant}`;
-  const cached = zkAssetCache.get(key);
-  if (cached) return { exists: true as const, data: cached };
-  return { exists: false as const };
-};
-
-const zkAssetStorer = async (data: ZkAssetData, context: { type: string; variant?: string }) => {
-  const key = `${context.type}:${context.variant}`;
-  zkAssetCache.set(key, data);
-  return { success: true as const };
-};
-
-// The prover object itself is also cached so we don't reconstruct it on every claim.
-let cachedZkProver: ReturnType<typeof getClaimReceiverClaimableUtxoIntoEncryptedBalanceProver> | null = null;
-function getOrCreateZkProver() {
-  if (!cachedZkProver) {
-    cachedZkProver = getClaimReceiverClaimableUtxoIntoEncryptedBalanceProver({
-      load: zkAssetLoader,
-      store: zkAssetStorer,
-    });
-  }
-  return cachedZkProver;
+// Mirrors the example's claimed-index-store: a local cache of note identifiers
+// that have been submitted for burn. This covers the gap between submitting and
+// on-chain confirmation, so we don't re-submit notes across sessions.
+// Example: lib/claimed-index-store.ts
+const BURNT_CACHE_PREFIX = "veil_claimed_";
+function burntKey(addr: string): string {
+  return `${BURNT_CACHE_PREFIX}${addr}`;
 }
 
-/**
- * React hook for scanning and claiming Umbra UTXOs.
- *
- * IMPORTANT: Must be used in a Client Component ("use client").
- *
- * @returns `scanAndClaim()` → Scans for UTXOs and claims them into encrypted balance.
- */
+function loadBurnt(addr: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(burntKey(addr));
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function addBurnt(addr: string, ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  const s = loadBurnt(addr);
+  for (const id of ids) s.add(id);
+  try {
+    localStorage.setItem(burntKey(addr), JSON.stringify([...s]));
+  } catch { /* best-effort */ }
+}
+
 export function useClaim() {
   const client = useUmbraStore((s) => s.client);
   const isInitializing = useUmbraStore((s) => s.isInitializing);
   const initError = useUmbraStore((s) => s.error);
 
-  const scanAndClaim = async (startTreeIndex: bigint = 0n, startInsertionIndex: bigint = 0n) => {
+  const scanAndClaim = async () => {
     if (isInitializing) {
       throw new Error("Umbra client is still initializing. Please wait...");
     }
@@ -65,105 +58,146 @@ export function useClaim() {
       throw new Error("Client not initialized. Please connect your wallet.");
     }
 
-    // Removed Step 0 debug block because api.devnet.solana.com frequently throws 503s here
+    const signerAddr = client.signer.address;
 
-    // Step 1: Scan for UTXOs
-    console.log("[useClaim] Scanning for UTXOs...");
-    console.log("[useClaim] Client signer address:", client.signer.address.toString());
-    console.log("[useClaim] Client has fetchUtxoData:", typeof client.fetchUtxoData === "function");
-    console.log("[useClaim] Client has fetchMerkleProof:", typeof client.fetchMerkleProof === "function");
-    console.log("[useClaim] Scan params - treeIndex:", startTreeIndex, "insertionIndex:", startInsertionIndex);
+    console.log("[useClaim] Scanning for STEALTH_POOL_NOTEs...");
 
-    // Diagnostic: check raw indexer stats
-    try {
-      const rawResponse = await fetch("https://utxo-indexer.api-devnet.umbraprivacy.com/v1/stats");
-      const statsText = await rawResponse.text();
-      console.log("[useClaim] Raw indexer stats response:", statsText);
-    } catch (e: unknown) {
-      console.error("[useClaim] Failed to fetch indexer stats:", e instanceof Error ? e.message : e);
+    // Step 1: scan to ingest new leaves into the store
+    const scan = getBurnableStealthPoolNoteScannerFunction({ client });
+    const fresh = await scan();
+
+    // Step 2: query the store for the full set of known notes
+    const store = client.utxoDataStore;
+    if (!store) {
+      throw new Error("utxoDataStore is not available on the client.");
     }
 
-    const scan = getClaimableUtxoScannerFunction({ client });
-    const scanResult = await scan(
-      BigInt(startTreeIndex) as any,
-      BigInt(startInsertionIndex) as any,
-    );
-
-    // ScannedUtxoResult has 4 buckets:
-    //   selfBurnable       — self-deposited from encrypted balance (ETA)
-    //   received           — receiver-claimable from encrypted balance (ETA)
-    //   publicSelfBurnable — self-deposited from public ATA
-    //   publicReceived     — receiver-claimable from public ATA ← patrons use this path
-    //
-    // Our send flow uses getPublicBalanceToReceiverClaimableUtxoCreatorFunction (public ATA source),
-    // so patron UTXOs land in publicReceived — NOT in received.
-    const { selfBurnable, received, publicSelfBurnable, publicReceived } = scanResult;
-
-    console.log("[useClaim] Scan complete. Buckets:", {
-      selfBurnable: selfBurnable.length,
-      received: received.length,
-      publicSelfBurnable: publicSelfBurnable.length,
-      publicReceived: publicReceived.length,
+    const entries = await store.query({
+      network: client.network,
+      signerAddress: signerAddr as Address,
     });
 
-    // Claim receiver-claimable UTXOs from both ETA-funded and public-ATA-funded paths.
-    const allReceived = [...received, ...publicReceived];
-    console.log("[useClaim] Total receiver-claimable UTXOs to claim:", allReceived.length);
+    console.log("[useClaim] Store query returned entries:", entries.length);
 
-    if (allReceived.length === 0) return { claimed: 0 };
+    // Step 3: filter to receiver-burnable notes (ETA-source only — ATA-source
+    // receiver notes have no burner in V18 yet: see example claim page §pending).
+    const receiverEntries = entries.filter(
+      (e: UtxoDataEntry) =>
+        e.claimType === "etaToStealthPoolReceiverBurnable"
+    );
 
-    // Step 2: Claim all into encrypted balance
-    const zkProver = getOrCreateZkProver();
+    console.log("[useClaim] Receiver-burnable notes found:", receiverEntries.length, {
+      totalStoreEntries: entries.length,
+      receiverCount: receiverEntries.length,
+    });
+
+    if (receiverEntries.length === 0) return { claimed: 0 };
+
+    // Step 4: reconcile with on-chain nullifier treaps so the local
+    // nullifierStore reflects on-chain state.
+    const nullifierStore = client.nullifierStore;
+    let confirmed = new Set<string>();
+    if (nullifierStore) {
+      for (const t of fresh.scannedTrees ?? []) {
+        try {
+          await reconcileWithOnChainState({ client, stealthPoolIndex: BigInt(t.treeIndex) as never });
+        } catch (e) {
+          console.warn("[useClaim] reconcile failed for tree", t.treeIndex, e);
+        }
+      }
+      try {
+        confirmed = (await nullifierStore.filterByState(["confirmed"])) as unknown as Set<string>;
+      } catch (e) {
+        console.warn("[useClaim] filterByState failed", e);
+      }
+    }
+
+    // Local burnt cache covers the gap between submitting a burn and the
+    // on-chain reconciliation confirming it.
+    const localBurnt = loadBurnt(signerAddr);
+
+    const isSpent = (e: UtxoDataEntry): boolean =>
+      (e.utxoKey !== undefined && confirmed.has(e.utxoKey)) ||
+      localBurnt.has(`${e.treeIndex}:${e.insertionIndex}`);
+
+    const unspentReceiver = receiverEntries.filter((e: UtxoDataEntry) => !isSpent(e));
+
+    console.log("[useClaim] Unspent receiver notes:", unspentReceiver.length, {
+      total: receiverEntries.length,
+      unspent: unspentReceiver.length,
+    });
+
+    if (unspentReceiver.length === 0) {
+      console.log("[useClaim] All receiver notes already burnt, nothing to claim.");
+      return { claimed: 0 };
+    }
+
     const relayer = getUmbraRelayer({
       apiEndpoint: "https://relayer.api-devnet.umbraprivacy.com",
     });
 
-    // fetchBatchMerkleProof comes from the client when indexerApiEndpoint is set.
-    const claimDeps = {
-      zkProver,
-      relayer,
-      ...(client.fetchBatchMerkleProof ? { fetchBatchMerkleProof: client.fetchBatchMerkleProof } : {}),
-      // Relayer polling: check every 5s, give up after 35 minutes.
-      // Observed: relayer endpoint reachable after ~1200s (20 min) on devnet.
-      // SDK default is 3s poll / 2min timeout — far too short.
-      pollingIntervalMs: 5000,
-      timeoutMs: 35 * 60 * 1000,
-    } as Parameters<typeof getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction>[1];
+    const errors: string[] = [];
+    const newlyBurnt: string[] = [];
 
-    const claim = getReceiverClaimableUtxoToEncryptedBalanceClaimerFunction(
-      { client },
-      claimDeps,
-    );
+    for (let i = 0; i < unspentReceiver.length; i += BURN_BATCH_SIZE) {
+      const chunk = unspentReceiver.slice(i, i + BURN_BATCH_SIZE);
 
-    // Hard wall-clock timeout: must be longer than the relayer polling timeout above.
-    // Set to 40 minutes to give the 35-minute relayer window room to complete
-    // before the wall clock fires.
-    const CLAIM_WALL_TIMEOUT_MS = 40 * 60 * 1000;
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Claim timed out after 40 minutes. The relayer may be unresponsive — please try again.")),
-        CLAIM_WALL_TIMEOUT_MS,
-      )
-    );
+      const burner = getReceiverBurnableStealthPoolNoteIntoETABurnerFunction(
+        { client },
+        {
+          fetchBatchMerkleProof: client.fetchBatchMerkleProof!,
+          zkProver: burnReceiverIntoEncryptedProver,
+          relayer: {
+            submitBurn: relayer.submitClaim,
+            pollBurnStatus: relayer.pollClaimStatus,
+            getRelayerAddress: relayer.getRelayerAddress,
+          },
+        },
+      );
 
-    const result = await Promise.race([claim(allReceived), timeoutPromise]);
+      try {
+        const out = await burner(chunk.map((e: UtxoDataEntry) => e.data) as never);
 
-    // The SDK returns status: "timed_out" | "failed" | "completed" — it does NOT
-    // throw on non-success. Surface failures explicitly so the catch block fires.
-    if (result && typeof result === "object" && "status" in result) {
-      const status = (result as { status: string }).status;
-      if (status === "timed_out") {
-        throw new Error(
-          "Claim timed out waiting for the relayer to confirm. Your UTXOs may still be processing — check your balance in a few minutes before retrying."
-        );
-      }
-      if (status === "failed") {
-        const reason = (result as { failureReason?: string }).failureReason;
-        throw new Error(`Claim failed: ${reason ?? "unknown relayer error"}`);
+        for (const [, batch] of out.batches) {
+          const b = batch as unknown as {
+            status: string;
+            requestId?: string;
+            txSignature?: string;
+            callbackSignature?: string;
+            failureReason?: string | null;
+          };
+
+          if (b.status === "completed" || b.status === "callback_received") {
+            console.log("[useClaim] Burn succeeded:", b.requestId);
+            for (const e of chunk) {
+              newlyBurnt.push(`${e.treeIndex}:${e.insertionIndex}`);
+            }
+          } else if (b.failureReason?.includes("NullifierAlreadyBurnt")) {
+            console.log("[useClaim] Note already burnt (idempotent).");
+            for (const e of chunk) {
+              newlyBurnt.push(`${e.treeIndex}:${e.insertionIndex}`);
+            }
+          } else {
+            const err = b.failureReason ?? `Burn ${b.status}`;
+            errors.push(err);
+            console.error("[useClaim] Burn failed:", err);
+          }
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error("[useClaim] Burn exception:", msg);
+        errors.push(msg);
       }
     }
 
-    return { claimed: allReceived.length };
+    // Persist successfully-burnt note ids so subsequent scans skip them.
+    addBurnt(signerAddr, newlyBurnt);
+
+    if (errors.length > 0) {
+      throw new Error(`Claim failed: ${errors.join("; ")}`);
+    }
+
+    return { claimed: unspentReceiver.length };
   };
 
   return { scanAndClaim };

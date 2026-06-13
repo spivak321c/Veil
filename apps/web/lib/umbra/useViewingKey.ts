@@ -1,7 +1,7 @@
 import {
   getMonthlyViewingKeyDeriver,
   getYearlyViewingKeyDeriver,
-} from "@umbra-privacy/sdk";
+} from "@umbra-privacy/sdk/crypto";
 import { useUmbraStore } from "./store";
 import type { Address } from "@solana/kit";
 

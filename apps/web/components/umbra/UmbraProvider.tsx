@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from "react";
 import { useWallet } from "@solana/react-hooks";
-import type { IUmbraSigner } from "@umbra-privacy/sdk/interfaces";
+import type { IUmbraSigner } from "@umbra-privacy/sdk";
 import { useUmbraStore } from "@/lib/umbra/store";
 import { initUmbraClient } from "@/lib/umbra/client";
 
@@ -37,31 +37,19 @@ export function UmbraProvider({ children }: { children: React.ReactNode }) {
       address,
 
       signTransaction: async (transaction: any): Promise<any> => {
-        const signed = await signTx(transaction);
-        return {
-          ...transaction,
-          signatures: { ...transaction.signatures, ...signed.signatures },
-        };
+        return await signTx(transaction);
       },
 
       signTransactions: async (transactions: readonly any[]): Promise<any[]> => {
         const s = session as any;
 
         if (s?.signTransactions) {
-          const signedArray = await s.signTransactions(transactions);
-          return transactions.map((tx, i) => ({
-            ...tx,
-            signatures: { ...tx.signatures, ...signedArray[i].signatures },
-          }));
+          return await s.signTransactions(transactions);
         }
 
         return Promise.all(
           transactions.map(async (tx) => {
-            const signed = await signTx(tx);
-            return {
-              ...tx,
-              signatures: { ...tx.signatures, ...signed.signatures },
-            };
+            return await signTx(tx);
           })
         );
       },

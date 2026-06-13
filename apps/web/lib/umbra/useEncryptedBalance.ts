@@ -1,18 +1,9 @@
-import { getEncryptedBalanceQuerierFunction } from "@umbra-privacy/sdk";
+import { getEncryptedBalanceQuerierFunction } from "@umbra-privacy/sdk/query";
 import { useUmbraStore } from "./store";
 import type { Address } from "@solana/kit";
 
 export type AccountState = "shared" | "mxe" | "none";
 
-/**
- * React hook for querying the encrypted balance.
- * 
- * IMPORTANT: Must be used in a Client Component ("use client").
- * 
- * @returns `getBalance()` → Queries the encrypted balance for USDC. Returns { balance, state }.
- *   - `balance`: null if account doesn't exist, 0n if MXE mode, >0n if shared
- *   - `state`: "shared" | "mxe" | "none"
- */
 export function useEncryptedBalance() {
   const client = useUmbraStore((s) => s.client);
   const isInitializing = useUmbraStore((s) => s.isInitializing);

@@ -1,5 +1,6 @@
-import { getUserRegistrationFunction, isRegistrationError } from "@umbra-privacy/sdk";
-import { getUserRegistrationProver } from "@umbra-privacy/web-zk-prover";
+import { isRegistrationError } from "@umbra-privacy/sdk";
+import { getUserRegistrationFunction } from "@umbra-privacy/sdk/registration";
+import { registrationProver } from "./zk-prover";
 import { useUmbraStore } from "./store";
 
 export function useUmbraRegistration() {
@@ -24,14 +25,10 @@ export function useUmbraRegistration() {
     }
 
     try {
-      console.log("[useUmbraRegistration] Getting registration prover...");
-      const zkProver = getUserRegistrationProver();
-      console.log("[useUmbraRegistration] Prover created:", typeof zkProver, "has prove:", typeof zkProver.prove);
-
-      console.log("[useUmbraRegistration] Getting registration function...");
+      console.log("[useUmbraRegistration] Creating registration function...");
       const registerFn = getUserRegistrationFunction(
         { client },
-        { zkProver }
+        { zkProver: registrationProver }
       );
 
       console.log("[useUmbraRegistration] Calling register (confidential=true, anonymous=true)...");

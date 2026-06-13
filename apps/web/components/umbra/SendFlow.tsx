@@ -143,7 +143,7 @@ export function SendFlow({ creatorSlug, creatorName, recipientAddress, amountMic
             </motion.div>
           )}
 
-          {(step.status === "checking_registration" || step.status === "registering" || step.status === "submitting" || step.status === "awaiting_mpc") && (
+          {(step.status === "checking_registration" || step.status === "registering" || step.status === "shielding" || step.status === "creating_note" || step.status === "awaiting_mpc") && (
             <motion.div 
               key="processing"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -164,14 +164,16 @@ export function SendFlow({ creatorSlug, creatorName, recipientAddress, amountMic
               <h3 className="font-heading text-2xl font-black text-veil-text mb-4 tracking-tight">
                 {step.status === "checking_registration" && "Checking Registration"}
                 {step.status === "registering" && "Registering with Umbra"}
-                {step.status === "submitting" && "Awaiting Signature"}
+                {step.status === "shielding" && "Shielding Funds"}
+                {step.status === "creating_note" && "Creating Private Note"}
                 {step.status === "awaiting_mpc" && "Processing Privacy"}
               </h3>
               
               <p className="text-base text-veil-muted font-medium leading-relaxed max-w-[25ch]">
                 {step.status === "checking_registration" && "Verifying your Umbra account status."}
                 {step.status === "registering" && "Setting up your anonymous account on Umbra. Approve the transaction in your wallet."}
-                {step.status === "submitting" && "Approve the transaction in your wallet to continue."}
+                {step.status === "shielding" && "Depositing funds into your shielded Umbra balance. Approve the transaction."}
+                {step.status === "creating_note" && "Generating a zero-knowledge proof and creating a private payment note for the creator."}
                 {step.status === "awaiting_mpc" && "Severing on-chain link via Arcium MPC. Please wait."}
               </p>
 

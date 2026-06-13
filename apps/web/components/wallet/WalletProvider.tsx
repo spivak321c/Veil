@@ -10,6 +10,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const websocketEndpoint = process.env.NEXT_PUBLIC_SOLANA_WSS_URL || "wss://api.devnet.solana.com";
 
     return createClient({
+      cluster: "devnet",
       endpoint,
       websocketEndpoint,
       walletConnectors: autoDiscover(),

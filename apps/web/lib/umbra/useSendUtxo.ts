@@ -1,11 +1,17 @@
 import {
-  getPublicBalanceToReceiverClaimableUtxoCreatorFunction,
-  getUserAccountQuerierFunction,
-  getUserRegistrationFunction,
   isCreateUtxoError,
   isRegistrationError,
 } from "@umbra-privacy/sdk";
-import { getCreateReceiverClaimableUtxoFromPublicBalanceProver, getUserRegistrationProver } from "@umbra-privacy/web-zk-prover";
+import {
+  getATAIntoETADirectDepositorFunction,
+  getETAIntoReceiverBurnableStealthPoolNoteCreatorFunction,
+} from "@umbra-privacy/sdk/deposit";
+import { getUserRegistrationFunction } from "@umbra-privacy/sdk/registration";
+import {
+  getEncryptedBalanceQuerierFunction,
+  getUserAccountQuerierFunction,
+} from "@umbra-privacy/sdk/query";
+import { createFromEncryptedProver, registrationProver } from "./zk-prover";
 import { useUmbraStore } from "./store";
 import type { Address } from "@solana/kit";
 
@@ -14,7 +20,8 @@ export type SendStep =
   | { status: 'confirming'; tierName: string; amountUsdc: number }
   | { status: 'checking_registration' }
   | { status: 'registering' }
-  | { status: 'submitting' }
+  | { status: 'shielding'; txSignature?: string }
+  | { status: 'creating_note' }
   | { status: 'awaiting_mpc'; queueSignature: string }
   | { status: 'success'; callbackSignature: string }
   | { status: 'error'; message: string };
@@ -49,7 +56,6 @@ export function useSendUtxo() {
 
     if (accountState === "exists") {
       console.log("[useSendUtxo] Patron account exists but anonymous usage NOT enabled");
-      console.log("[useSendUtxo] Account data isActiveForAnonymousUsage:", accountData?.isActiveForAnonymousUsage);
     } else {
       console.log("[useSendUtxo] Patron not registered at all");
     }
@@ -58,32 +64,30 @@ export function useSendUtxo() {
 
     try {
       console.log("[useSendUtxo] Starting registration with confidential=true, anonymous=true");
-      const zkProver = getUserRegistrationProver();
       const registerFn = getUserRegistrationFunction(
         { client },
-        { zkProver }
+        { zkProver: registrationProver }
       );
       const regResult = await registerFn({
         confidential: true,
         anonymous: true,
-        callbacks: {
-          userAccountInitialisation: {
-            pre: async () => console.log("[useSendUtxo] Registration step 1: Creating account..."),
-            post: async (_tx, sig) => console.log("[useSendUtxo] Registration step 1 complete:", sig),
+        hooks: {
+          initUserAccount: {
+            onTransactionBuilt: async () => console.log("[useSendUtxo] Registration step 1: Creating account..."),
+            onPostSend: async (event) => console.log("[useSendUtxo] Registration step 1 complete:", event.signature),
           },
           registerX25519PublicKey: {
-            pre: async () => console.log("[useSendUtxo] Registration step 2: Registering encryption key..."),
-            post: async (_tx, sig) => console.log("[useSendUtxo] Registration step 2 complete:", sig),
+            onTransactionBuilt: async () => console.log("[useSendUtxo] Registration step 2: Registering encryption key..."),
+            onPostSend: async (event) => console.log("[useSendUtxo] Registration step 2 complete:", event.signature),
           },
-          registerUserForAnonymousUsage: {
-            pre: async () => console.log("[useSendUtxo] Registration step 3: Enabling anonymous mode..."),
-            post: async (_tx, sig) => console.log("[useSendUtxo] Registration step 3 complete:", sig),
+          registerAnonymousUsage: {
+            onTransactionBuilt: async () => console.log("[useSendUtxo] Registration step 3: Enabling anonymous mode..."),
+            onPostSend: async (event) => console.log("[useSendUtxo] Registration step 3 complete:", event.signature),
           },
         },
       });
       console.log("[useSendUtxo] Registration completed:", regResult);
 
-      // Verify the anonymous bit was actually set
       const verifyResult = await queryUserAccount(patronAddress as Address).catch((e: unknown) => {
         console.error("[useSendUtxo] Post-registration verification failed:", e);
         return { state: "non_existent" } as const;
@@ -101,7 +105,6 @@ export function useSendUtxo() {
       if (isRegistrationError(err)) {
         console.error("[useSendUtxo] Registration failed at stage:", err.stage);
         console.error("[useSendUtxo] Registration error message:", err.message);
-        console.error("[useSendUtxo] Registration error stack:", err.stack);
         if (err.stage === "initialization" && err.message?.includes("already")) {
           console.log("[useSendUtxo] Registration already done (idempotent), continuing");
           return;
@@ -169,52 +172,76 @@ export function useSendUtxo() {
       throw new Error("The creator has not completed Umbra registration and cannot receive anonymous payments. Please try again later or contact the creator.");
     }
 
-    console.log("[useSendUtxo] Initializing ZK prover...");
-    const zkProver = getCreateReceiverClaimableUtxoFromPublicBalanceProver();
-
-    console.log("[useSendUtxo] Creating UTXO function...");
-    const createUtxo = getPublicBalanceToReceiverClaimableUtxoCreatorFunction(
-      { client },
-      { zkProver },
-    );
-
-    onProgress({ status: 'submitting' });
-
     try {
-      console.log("[useSendUtxo] Calling createUtxo with:", {
+      // Step 1: Check ETA balance — skip shield if sufficient
+      console.log("[useSendUtxo] Checking ETA balance...");
+      const queryBalance = getEncryptedBalanceQuerierFunction({ client });
+      const balances = await queryBalance([USDC_MINT as Address]);
+      const etaResult = balances.get(USDC_MINT as Address);
+      const etaBalance = etaResult?.state === "shared" ? etaResult.balance : 0n;
+      const needsShield = etaBalance < amountUsdc;
+
+      console.log("[useSendUtxo] ETA balance:", etaBalance, "needs shield:", needsShield);
+
+      if (needsShield) {
+        onProgress({ status: 'shielding' });
+
+        console.log("[useSendUtxo] Shielding ATA→ETA with:", {
+          mint: USDC_MINT,
+          amount: amountUsdc,
+        });
+
+        const depositFn = getATAIntoETADirectDepositorFunction({ client });
+        const depositResult = await depositFn(
+          client.signer.address as Address,
+          USDC_MINT as Address,
+          amountUsdc as never,
+        );
+
+        console.log("[useSendUtxo] Shield result:", depositResult);
+        const shieldSig = (depositResult as any).queueSignature;
+        onProgress({ status: 'shielding', txSignature: shieldSig });
+      } else {
+        console.log("[useSendUtxo] Sufficient ETA balance, skipping shield.");
+      }
+
+      // Step 2: Create receiver-burnable note from ETA → receiver
+      onProgress({ status: 'creating_note' });
+
+      console.log("[useSendUtxo] Creating ETA→receiver note with:", {
         destinationAddress: recipientAddress,
         mint: USDC_MINT,
         amount: amountUsdc,
       });
 
+      const createUtxo = getETAIntoReceiverBurnableStealthPoolNoteCreatorFunction(
+        { client },
+        { zkProver: createFromEncryptedProver },
+      );
+
       const result = await createUtxo({
         destinationAddress: recipientAddress as Address,
         mint: USDC_MINT as Address,
-        amount: amountUsdc as unknown as Parameters<typeof createUtxo>[0]["amount"],
+        amount: amountUsdc as never,
       });
 
       console.log("[useSendUtxo] createUtxo result:", result);
-      console.log("[useSendUtxo] createUtxo full result:", JSON.stringify(result));
-      console.log("[useSendUtxo] createUtxo result keys:", Object.keys(result as object));
 
+      const queueSig = (result as any).queueSignature;
+      const populateProofSig = (result as any).populateProofAccountSignature;
+      const callbackSig = (result as any).callback?.signature;
 
+      console.log("[useSendUtxo] Signatures:", { populateProofSig, queueSig, callbackSig });
 
-      //const utxoSig = result.createUtxoSignature;
-      const utxoSig = (result as any).createUtxoSignature
-  ?? (result as any).utxoSignature
-  ?? (result as any).queueSignature
-  ?? (result as any).signature;
-
-      console.log("[useSendUtxo] Extracted signature:", utxoSig);
-
-      if (!utxoSig) {
+      const returnSig = queueSig ?? populateProofSig;
+      if (!returnSig) {
         console.error("[useSendUtxo] No transaction signature returned from createUtxo!");
         throw new Error("Transaction completed but no signature was returned. The payment may still be processing — check your wallet.");
       }
 
-      onProgress({ status: 'awaiting_mpc', queueSignature: utxoSig });
-      onProgress({ status: 'success', callbackSignature: utxoSig });
-      return utxoSig;
+      onProgress({ status: 'awaiting_mpc', queueSignature: returnSig });
+      onProgress({ status: 'success', callbackSignature: callbackSig ?? returnSig });
+      return returnSig;
     } catch (err: unknown) {
       let userMessage = "Failed to send payment.";
 
@@ -230,11 +257,10 @@ export function useSendUtxo() {
             userMessage = "Zero-knowledge proof generation failed. This may be due to high memory usage. Try refreshing and sending again.";
             break;
           default:
-            userMessage = `UTXO creation failed at stage: ${err.stage}. ${err.message}`;
+            userMessage = `Stealth Pool Note creation failed at stage: ${err.stage}. ${err.message}`;
         }
       } else if (err instanceof Error) {
         const raw = err.message;
-        console.log("[useSendUtxo] Raw error message:", raw);
 
         if (raw.includes("AccountNotInitialized") || raw.includes("fee_schedule") || raw.includes("3012")) {
           userMessage =

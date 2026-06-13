@@ -16,7 +16,7 @@ export function ClaimPanel({ onClaimed }: { onClaimed: () => void }) {
   const handleScanAndClaim = async () => {
     try {
       setStatus("scanning");
-      const result = await scanAndClaim(0n, 0n);
+      const result = await scanAndClaim();
 
       setLastResult(result);
 

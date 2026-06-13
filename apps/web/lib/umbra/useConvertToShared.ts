@@ -1,4 +1,4 @@
-import { getNetworkEncryptionToSharedEncryptionConverterFunction } from "@umbra-privacy/sdk";
+import { getNetworkEncryptionToSharedEncryptionConverterFunction } from "@umbra-privacy/sdk/conversion";
 import type { Address } from "@solana/kit";
 import { useUmbraStore } from "./store";
 
